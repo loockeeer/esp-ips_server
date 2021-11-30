@@ -1,0 +1,61 @@
+version: "3.9"
+services:
+  server:
+    build: .
+    hostname: espips-server
+    links:
+      - database
+      - mqtt
+    depends_on:
+      - "database:influx"
+      - "mqtt_broker:mqtt"
+    environment:
+      - INFLUX_HOST=influx
+      - INFLUX_TOKEN
+      - INFLUX_ORG
+      - INFLUX_BUCKET
+      - MQTT_HOST=mqtt
+      - MQTT_PORT
+      - API_HOST
+      - API_PORT
+    env_file:
+      - .env
+
+    ports:
+      - "8080:80"
+    volumes:
+      - ./config/server.yml:/usr/src/app/config.yml
+    restart: on-failure
+
+  database:
+    image: influxdb:2.1.1-alpine
+    environment:
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USERNAME}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_TOKEN}
+    env_file:
+      - .env
+
+    restart: on-failure
+    volumes:
+      - influx_data:/var/lib/influxdb2
+      - ./config/influxdb.yml:/etc/influxdb2/config.yml
+
+  mqtt_broker:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+
+    restart: on-failure
+
+volumes:
+  mosquitto_data: {}
+  mosquitto_logs: {}
+  influx_data: {}

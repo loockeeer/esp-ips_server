@@ -1,0 +1,5 @@
+build
+config
+.env
+.idea
+go.sum
