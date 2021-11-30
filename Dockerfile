@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-RUN go build .
+RUN make build
 
 FROM alpine
 
