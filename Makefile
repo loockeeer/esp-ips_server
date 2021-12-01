@@ -1,6 +1,6 @@
-BINARY_NAME=build/main
+BINARY_NAME=build/main.out
 build:
-	go build -o ${BINARY_NAME} main.go
+	GOOS=linux go build -o ${BINARY_NAME} src/main.go
 
 clean:
 	go clean
