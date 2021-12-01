@@ -7,4 +7,5 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.6.0
 	github.com/rigglo/gql v0.5.1
 	github.com/rigglo/gqlws v0.2.0
+	gonum.org/v1/gonum v0.9.3
 )
