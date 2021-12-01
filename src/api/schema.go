@@ -49,14 +49,39 @@ var queryType = &gql.Object{
 				},
 			},
 			Resolver: func(ctx gql.Context) (interface{}, error) {
-				return nil, nil
+				devices, _ := internals.ListDevices()
+				for _, device := range devices {
+					if device.Address == ctx.Args()["address"] {
+						return internals.GraphQLDevice{
+							Address:      device.Address,
+							FriendlyName: device.FriendlyName,
+							X:            device.X,
+							Y:            device.Y,
+							Speed:        device.GetSpeed(),
+							Battery:      device.GetBattery(),
+						}, nil
+					}
+				}
+				return internals.GraphQLDevice{}, nil
 			},
 		},
 		"devices": &gql.Field{
 			Type:        gql.NewList(deviceType),
 			Description: "Get device list",
 			Resolver: func(ctx gql.Context) (interface{}, error) {
-				return nil, nil
+				devices, _ := internals.ListDevices()
+				var data []internals.GraphQLDevice
+				for _, device := range devices {
+					data = append(data, internals.GraphQLDevice{
+						Address:      device.Address,
+						FriendlyName: device.FriendlyName,
+						X:            device.X,
+						Y:            device.Y,
+						Speed:        device.GetSpeed(),
+						Battery:      device.GetBattery(),
+					})
+				}
+				return data, nil
 			},
 		},
 	},
@@ -74,7 +99,7 @@ var subscriptionsType = &gql.Object{
 				},
 			},
 			Resolver: func(ctx gql.Context) (interface{}, error) {
-				out := make(chan internals.Device)
+				out := make(chan internals.GraphQLDevice)
 				go func() {
 					for {
 						select {

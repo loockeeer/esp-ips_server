@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-var PositionEmitter = make(chan internals.Device)
+var PositionEmitter = make(chan internals.GraphQLDevice)
 
 func Start(host string, port int) {
 	schema := &gql.Schema{
