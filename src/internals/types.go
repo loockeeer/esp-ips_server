@@ -6,12 +6,10 @@ import (
 )
 
 type Device struct {
-	Address      string
-	FriendlyName string
-	X            float64
-	Y            float64
-	Speed        float64
-	Battery      float64
+	Address      string  `json:"address"`
+	FriendlyName string  `json:"friendly_name"`
+	X            float64 `json:"x"`
+	Y            float64 `json:"y"`
 }
 
 func (d Device) GetX() float64 {
@@ -44,6 +42,15 @@ func (d Device) GetBattery() float64 {
 		log.Panicln(err)
 	}
 	return result
+}
+
+type GraphQLDevice struct {
+	Address      string
+	FriendlyName string
+	X            float64
+	Y            float64
+	Speed        float64
+	Battery      float64
 }
 
 type Position struct {
