@@ -3,10 +3,15 @@ package mqtt
 import (
 	"errors"
 	"espips_server/src/database"
+	"espips_server/src/utils"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"strconv"
 	"strings"
+)
+
+var (
+	rssiBuffer map[string]map[string][]int
 )
 
 func onConnect(client mqtt.Client) {
@@ -40,11 +45,15 @@ func ccHandler(client mqtt.Client, message mqtt.Message) {
 }
 
 func rssiHandler(client mqtt.Client, message mqtt.Message) {
-	address, payload, err := getMessageInfo(message)
+	sender, payload, err := getMessageInfo(message)
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Printf("Received RSSI (%s) from %s\n", payload, address)
+	log.Printf("Received RSSI (%s) from %s\n", payload, sender)
+
+	scanned := strings.Split(payload, ",")[0]
+	rssi := utils.Atoi(strings.Split(payload, ",")[1], "RSSI value received is not a number !")
+	rssiBuffer[scanned][sender] = append(rssiBuffer[scanned][sender], rssi)
 }
 
 func batteryHandler(client mqtt.Client, message mqtt.Message) {
@@ -59,5 +68,8 @@ func batteryHandler(client mqtt.Client, message mqtt.Message) {
 		log.Panic(err)
 	}
 
-	database.Connection.PushBattery(address, batteryLevel)
+	err = database.Connection.PushBattery(address, batteryLevel)
+	if err != nil {
+		log.Panicln(err)
+	}
 }
