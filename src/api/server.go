@@ -11,7 +11,7 @@ import (
 
 var PositionEmitter = make(chan internals.Device)
 
-func Start(host string, port string) {
+func Start(host string, port int) {
 	schema := &gql.Schema{
 		Query:        queryType,
 		Subscription: subscriptionsType,
@@ -41,7 +41,7 @@ func Start(host string, port string) {
 
 	http.Handle("/graphql", wsQL)
 	http.Handle("/graphiql", wsIQL)
-	if err := http.ListenAndServe(fmt.Sprintf("%s:%s", host, port), nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), nil); err != nil {
 		panic(err)
 	}
 }

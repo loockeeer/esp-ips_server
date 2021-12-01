@@ -5,7 +5,6 @@ import (
 	"espips_server/src/database"
 	"espips_server/src/mqtt"
 	"log"
-	"os"
 	"sync"
 )
 
@@ -16,11 +15,11 @@ func main() {
 
 	log.Println("Connecting to InfluxDB on")
 	database.Connect(
-		os.Getenv("INFLUX_HOST"),
-		os.Getenv("INFLUX_PORT"),
-		os.Getenv("INFLUX_TOKEN"),
-		os.Getenv("INFLUX_ORG"),
-		os.Getenv("INFLUX_BUCKET"))
+		INFLUX_HOST,
+		INFLUX_PORT,
+		INFLUX_TOKEN,
+		INFLUX_ORG,
+		INFLUX_BUCKET)
 
 	log.Println("Connected to InfluxDB")
 
@@ -29,7 +28,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		mqtt.Connect(os.Getenv("MQTT_HOST"), os.Getenv("MQTT_PORT"))
+		mqtt.Connect(MQTT_HOST, MQTT_PORT)
 	}()
 
 	// Start GraphQL API
@@ -37,7 +36,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		api.Start(os.Getenv("API_HOST"), os.Getenv("API_PORT"))
+		api.Start(API_HOST, API_PORT)
 	}()
 
 	wg.Wait()

@@ -6,9 +6,9 @@ import (
 	"log"
 )
 
-func Connect(host string, port string) {
+func Connect(host string, port int) {
 	opts := pahoMqtt.NewClientOptions()
-	opts.AddBroker(fmt.Sprintf("tcp://%s:%s", host, port))
+	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", host, port))
 	opts.SetClientID("server")
 	opts.OnConnect = onConnect
 

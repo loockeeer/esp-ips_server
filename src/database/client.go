@@ -18,8 +18,8 @@ type Database struct {
 
 var Connection Database
 
-func Connect(host string, port string, token string, org string, bucket string) Database {
-	client := influxdb2.NewClient(fmt.Sprintf("http://%s:%s", host, port), token)
+func Connect(host string, port int, token string, org string, bucket string) Database {
+	client := influxdb2.NewClient(fmt.Sprintf("http://%s:%d", host, port), token)
 
 	Connection = Database{
 		client,
