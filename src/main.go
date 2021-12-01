@@ -15,11 +15,11 @@ func main() {
 
 	log.Println("Connecting to InfluxDB on")
 	database.Connect(
-		INFLUX_HOST,
-		INFLUX_PORT,
-		INFLUX_TOKEN,
-		INFLUX_ORG,
-		INFLUX_BUCKET)
+		InfluxHost,
+		InfluxPort,
+		InfluxToken,
+		InfluxOrg,
+		InfluxBucket)
 
 	log.Println("Connected to InfluxDB")
 
@@ -28,7 +28,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		mqtt.Connect(MQTT_HOST, MQTT_PORT)
+		mqtt.Connect(MqttHost, MqttPort)
 	}()
 
 	// Start GraphQL API
@@ -36,7 +36,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		api.Start(API_HOST, API_PORT)
+		api.Start(ApiHost, ApiPort)
 	}()
 
 	wg.Wait()

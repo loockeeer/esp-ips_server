@@ -19,7 +19,7 @@ type Database struct {
 var Connection Database
 
 func Connect(host string, port int, token string, org string, bucket string) Database {
-	client := influxdb2.NewClient(fmt.Sprintf("http://%s:%d", host, port), token)
+	client := influxdb2.NewClient(fmt.Sprintf("http://%s:%d²", host, port), token)
 
 	Connection = Database{
 		client,
