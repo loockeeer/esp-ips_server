@@ -21,6 +21,6 @@ func Connect(host string, port int) {
 	log.Println("Connected to broker")
 
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+		log.Panicln(token)
 	}
 }

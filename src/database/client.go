@@ -2,13 +2,17 @@ package database
 
 import (
 	"context"
-	"espips_server/src/internals"
 	"espips_server/src/utils"
 	"fmt"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"time"
 )
+
+type Position struct {
+	X float64
+	Y float64
+}
 
 type Database struct {
 	client influxdb2.Client
@@ -104,7 +108,7 @@ from(bucket:"%s")
 	return utils.Distance(startX, startY, x, y) / 3, nil
 }
 
-func (d Database) GetPosition(address string) (position internals.Position, err error) {
+func (d Database) GetPosition(address string) (position Position, err error) {
 	result, err := d.getReadClient().Query(context.Background(), fmt.Sprintf(`
 from(bucket:"%s")
   |> limit(n: 1)
@@ -115,10 +119,10 @@ from(bucket:"%s")
   |> yield()
 `, d.bucket, address))
 	if err != nil {
-		return internals.Position{}, err
+		return Position{}, err
 	} else {
 		result.Next()
-		return internals.Position{
+		return Position{
 			X: result.Record().ValueByKey("x").(float64),
 			Y: result.Record().ValueByKey("y").(float64),
 		}, nil

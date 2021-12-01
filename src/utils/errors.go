@@ -7,6 +7,7 @@ import (
 
 func Atoi(input string, message string) int {
 	n, err := strconv.Atoi(input)
+
 	if err != nil {
 		log.Panicln(message)
 	}

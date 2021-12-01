@@ -8,23 +8,23 @@ import (
 
 var (
 	MqttHost = os.Getenv("MQTT_HOST")
-	MqttPort = utils.Atoi("MQTT_PORT", "MQTT port is not a number !")
+	MqttPort = utils.Atoi(os.Getenv("MQTT_PORT"), "MQTT port is not a number !")
 )
 
 var (
 	ApiHost = os.Getenv("API_HOST")
-	ApiPort = utils.Atoi("API_PORT", "API port is not a number !")
+	ApiPort = utils.Atoi(os.Getenv("API_PORT"), "API port is not a number !")
 )
 
 var (
 	InfluxHost   = os.Getenv("INFLUX_HOST")
-	InfluxPort   = utils.Atoi("INFLUX_PORT", "Influx port is not a number !")
+	InfluxPort   = utils.Atoi(os.Getenv("INFLUX_PORT"), "Influx port is not a number !")
 	InfluxToken  = os.Getenv("INFLUX_TOKEN")
 	InfluxOrg    = os.Getenv("INFLUX_ORG")
 	InfluxBucket = os.Getenv("INFLUX_BUCKET")
 )
 
-var RssiBufferSize = utils.Atoi("RSSI_BUFFER_SIZE", "RSSI Buffer size is not a number !")
+//var RssiBufferSize = utils.Atoi("RSSI_BUFFER_SIZE", "RSSI Buffer size is not a number !")
 
 var CONFIG_FILE = os.Getenv("CONFIG_FILE")
 

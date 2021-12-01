@@ -21,6 +21,7 @@ func main() {
 	for _, device := range devices {
 		log.Printf("Loaded device %s (AKA %s)\n", device.Address, device.FriendlyName)
 	}
+	log.Println("Devices loaded")
 
 	log.Println("Connecting to InfluxDB on")
 	database.Connect(
