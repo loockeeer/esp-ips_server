@@ -6,12 +6,10 @@ COPY . .
 
 RUN make build
 
-FROM alpine
+FROM debian
 
 WORKDIR /usr/src/app
 
-COPY ./config.yaml .
+COPY --from=build /usr/src/app/build/main.out .
 
-COPY --from=build /usr/src/app/build/main .
-
-CMD [ "./main" ]
+CMD [ "./main.out" ]
