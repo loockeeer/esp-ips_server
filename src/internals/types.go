@@ -45,12 +45,12 @@ func (d Device) GetBattery() float64 {
 }
 
 type GraphQLDevice struct {
-	Address      string
-	FriendlyName string
-	X            float64
-	Y            float64
-	Speed        float64
-	Battery      float64
+	Address      string  `json:"address"`
+	FriendlyName string  `json:"friendlyName"`
+	X            float64 `json:"x"`
+	Y            float64 `json:"y"`
+	Speed        float64 `json:"speed"`
+	Battery      float64 `json:"battery"`
 }
 
 type Position struct {
