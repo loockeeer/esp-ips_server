@@ -21,6 +21,8 @@ type Database struct {
 }
 
 var Connection Database
+var positionCache map[string]Position
+var batteryCache map[string]float64
 
 func Connect(host string, port int, token string, org string, bucket string) Database {
 	client := influxdb2.NewClient(fmt.Sprintf("http://%s:%d²", host, port), token)
@@ -41,9 +43,12 @@ func (d Database) getReadClient() api.QueryAPI {
 	return d.client.QueryAPI(d.org)
 }
 
-func (d Database) PushKeep(address string) error {
-	point := influxdb2.NewPointWithMeasurement("keep").
-		AddField("address", address).
+func (d Database) PushRSSI(scanner string, scannedAddress string, rssi int, trainID string) error {
+	point := influxdb2.NewPointWithMeasurement("rssi").
+		AddField("scanner", scanner).
+		AddField("scanned", scannedAddress).
+		AddField("rssi", rssi).
+		AddField("trainID", trainID).
 		SetTime(time.Now())
 
 	err := d.getWriteClient().WritePoint(context.Background(), point)
@@ -53,11 +58,12 @@ func (d Database) PushKeep(address string) error {
 	return nil
 }
 
-func (d Database) PushPosition(address string, x float64, y float64) error {
+func (d Database) PushPosition(address string, pos Position) error {
+	positionCache[address] = pos
 	point := influxdb2.NewPointWithMeasurement("position").
 		AddTag("address", address).
-		AddField("x", x).
-		AddField("y", y).
+		AddField("x", pos.X).
+		AddField("y", pos.Y).
 		SetTime(time.Now())
 	err := d.getWriteClient().WritePoint(context.Background(), point)
 	if err != nil {
@@ -67,6 +73,7 @@ func (d Database) PushPosition(address string, x float64, y float64) error {
 }
 
 func (d Database) PushBattery(address string, battery float64) error {
+	batteryCache[address] = battery
 	point := influxdb2.NewPointWithMeasurement("battery").
 		AddTag("address", address).
 		AddField("battery", battery).
@@ -109,6 +116,9 @@ from(bucket:"%s")
 }
 
 func (d Database) GetPosition(address string) (position Position, err error) {
+	if val, ok := positionCache[address]; ok {
+		return val, nil
+	}
 	result, err := d.getReadClient().Query(context.Background(), fmt.Sprintf(`
 from(bucket:"%s")
   |> limit(n: 1)
@@ -130,6 +140,9 @@ from(bucket:"%s")
 }
 
 func (d Database) GetBattery(address string) (batteryLevel float64, err error) {
+	if val, ok := batteryCache[address]; ok {
+		return val, nil
+	}
 	result, err := d.getReadClient().Query(context.Background(), fmt.Sprintf(`
 from(bucket:"%s")
   |> limit(n: 1)
@@ -144,5 +157,31 @@ from(bucket:"%s")
 	} else {
 		result.Next()
 		return result.Record().ValueByKey("battery").(float64), nil
+	}
+}
+
+func (d Database) GetRSSIHistory(trainID string) (history map[string]map[string][]float64, err error) {
+	result, err := d.getReadClient().Query(context.Background(), fmt.Sprintf(`
+from(bucket:"%s")
+  |> limit(n: 1)
+  |> filter(fn: (r) =>
+    r._measurement == "rssi" and
+	r.trainID = "%s"
+  )
+  |> group(columns: ["scanner", "scanned"]
+  |> yield()
+`, d.bucket, trainID))
+	if err != nil {
+		return nil, err
+	} else {
+		for result.Next() {
+			scanner := result.TableMetadata().Column(0).DefaultValue()
+			scanned := result.TableMetadata().Column(1).DefaultValue()
+			if result.TableChanged() {
+				history[scanner][scanned] = []float64{}
+			}
+			history[scanner][scanned] = append(history[scanner][scanned], result.Record().ValueByKey("rssi").(float64))
+		}
+		return history, nil
 	}
 }
