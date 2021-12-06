@@ -23,7 +23,8 @@ func main() {
 	}
 	log.Println("Devices loaded")
 
-	log.Println("Connecting to InfluxDB on")
+	// Connecting to InfluxDB (non blocking)
+	log.Println("Connecting to InfluxDB")
 	database.Connect(
 		internals.InfluxHost,
 		internals.InfluxPort,
@@ -33,7 +34,7 @@ func main() {
 
 	log.Println("Connected to InfluxDB")
 
-	// Connect to MQTT Broker
+	// Connect to MQTT Broker (Blocking)
 	log.Println("Connecting to mqtt broker")
 	wg.Add(1)
 	go func() {
@@ -41,7 +42,7 @@ func main() {
 		mqtt.Connect(internals.MqttHost, internals.MqttPort)
 	}()
 
-	// Start GraphQL API
+	// Start GraphQL API (Blocking)
 	log.Println("Starting GraphQL API")
 	wg.Add(1)
 	go func() {
