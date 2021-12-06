@@ -30,42 +30,41 @@ func getMessageInfo(message mqtt.Message) (address string, payload string, err e
 func ccHandler(client mqtt.Client, message mqtt.Message) {
 	address, payload, err := getMessageInfo(message)
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 	switch payload {
 	case "4":
 		log.Printf("Received ack from %s\n", address)
-	case "5":
-		log.Printf("Received keep from %s\n", address)
-		err := database.Connection.PushKeep(address)
-		if err != nil {
-			log.Panic(err)
-		}
+		break
 	}
 }
 
 func rssiHandler(client mqtt.Client, message mqtt.Message) {
 	sender, payload, err := getMessageInfo(message)
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 	log.Printf("Received RSSI (%s) from %s\n", payload, sender)
 
 	scanned := strings.Split(payload, ",")[0]
 	rssi := utils.Atoi(strings.Split(payload, ",")[1], "RSSI value received is not a number !")
-	rssiBuffer[scanned][sender] = append(rssiBuffer[scanned][sender], rssi)
+	rssiBuffer[sender][scanned] = append(rssiBuffer[sender][scanned], rssi)
+	err = database.Connection.PushRSSI(sender, scanned, rssi, "")
+	if err != nil {
+		log.Panicln(err)
+	}
 }
 
 func batteryHandler(client mqtt.Client, message mqtt.Message) {
 	address, payload, err := getMessageInfo(message)
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 	log.Printf("Received battery info (%s) from %s\n", payload, address)
 
 	batteryLevel, err := strconv.ParseFloat(payload, 64)
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 
 	err = database.Connection.PushBattery(address, batteryLevel)
