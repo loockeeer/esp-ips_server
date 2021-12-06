@@ -1,7 +1,6 @@
 package api
 
 import (
-	"espips_server/src/internals"
 	"fmt"
 	"github.com/rigglo/gql"
 	"github.com/rigglo/gql/pkg/handler"
@@ -9,12 +8,11 @@ import (
 	"net/http"
 )
 
-var PositionEmitter = make(chan internals.GraphQLDevice)
-
 func Start(host string, port int) {
 	schema := &gql.Schema{
 		Query:        queryType,
 		Subscription: subscriptionsType,
+		//Mutation:     mutationType,
 	}
 
 	executor := gql.DefaultExecutor(schema)
