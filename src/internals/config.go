@@ -8,24 +8,26 @@ import (
 
 var (
 	MqttHost = os.Getenv("MQTT_HOST")
-	MqttPort = utils.Atoi(os.Getenv("MQTT_PORT"), "MQTT port is not a number !")
+	MqttPort = utils.Atoi(os.Getenv("MQTT_PORT"), "MQTT port should be number !")
 )
 
 var (
 	ApiHost = os.Getenv("API_HOST")
-	ApiPort = utils.Atoi(os.Getenv("API_PORT"), "API port is not a number !")
+	ApiPort = utils.Atoi(os.Getenv("API_PORT"), "API port should be number !")
 )
 
 var (
 	InfluxHost   = os.Getenv("INFLUX_HOST")
-	InfluxPort   = utils.Atoi(os.Getenv("INFLUX_PORT"), "Influx port is not a number !")
+	InfluxPort   = utils.Atoi(os.Getenv("INFLUX_PORT"), "Influx port should be number !")
 	InfluxToken  = os.Getenv("INFLUX_TOKEN")
 	InfluxOrg    = os.Getenv("INFLUX_ORG")
 	InfluxBucket = os.Getenv("INFLUX_BUCKET")
 )
 
-var RssiBufferSize = utils.Atoi("RSSI_BUFFER_SIZE", "RSSI Buffer size is not a number !")
-var InitRssiBufferSize = utils.Atoi("INIT_RSSI_BUFFER_SIZE", "Init RSSI Buffer size is not a number !")
+var RssiBufferSize = utils.Atoi("RSSI_BUFFER_SIZE", "RSSI Buffer size should be number !")
+var InitRssiBufferSize = utils.Atoi("INIT_RSSI_BUFFER_SIZE", "Init RSSI Buffer size should be number !")
+
+var RssiDistanceOrder = utils.Atoi("RSSI_DISTANCE_ORDER", "RSSI-Distance relation order should be number !")
 
 var CONFIG_FILE = os.Getenv("CONFIG_FILE")
 
@@ -53,11 +55,11 @@ func ListDevices() (devices []Device, err error) {
 	return devices, nil
 }
 
-func GetDevice(address string) Device {
+func GetDevice(address string) *Device {
 	for _, device := range devicesCache {
 		if device.Address == address {
-			return device
+			return &device
 		}
 	}
-	return Device{}
+	return &Device{}
 }

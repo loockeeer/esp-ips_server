@@ -20,14 +20,14 @@ type Database struct {
 	bucket string
 }
 
-var Connection Database
+var Connection *Database
 var positionCache map[string]Position
 var batteryCache map[string]float64
 
-func Connect(host string, port int, token string, org string, bucket string) Database {
+func Connect(host string, port int, token string, org string, bucket string) *Database {
 	client := influxdb2.NewClient(fmt.Sprintf("http://%s:%d²", host, port), token)
 
-	Connection = Database{
+	Connection = &Database{
 		client,
 		org,
 		bucket,
@@ -115,9 +115,9 @@ from(bucket:"%s")
 	return utils.Distance(startX, startY, x, y) / 3, nil
 }
 
-func (d Database) GetPosition(address string) (position Position, err error) {
+func (d Database) GetPosition(address string) (position *Position, err error) {
 	if val, ok := positionCache[address]; ok {
-		return val, nil
+		return &val, nil
 	}
 	result, err := d.getReadClient().Query(context.Background(), fmt.Sprintf(`
 from(bucket:"%s")
@@ -129,10 +129,10 @@ from(bucket:"%s")
   |> yield()
 `, d.bucket, address))
 	if err != nil {
-		return Position{}, err
+		return nil, err
 	} else {
 		result.Next()
-		return Position{
+		return &Position{
 			X: result.Record().ValueByKey("x").(float64),
 			Y: result.Record().ValueByKey("y").(float64),
 		}, nil
