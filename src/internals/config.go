@@ -24,7 +24,8 @@ var (
 	InfluxBucket = os.Getenv("INFLUX_BUCKET")
 )
 
-//var RssiBufferSize = utils.Atoi("RSSI_BUFFER_SIZE", "RSSI Buffer size is not a number !")
+var RssiBufferSize = utils.Atoi("RSSI_BUFFER_SIZE", "RSSI Buffer size is not a number !")
+var InitRssiBufferSize = utils.Atoi("INIT_RSSI_BUFFER_SIZE", "Init RSSI Buffer size is not a number !")
 
 var CONFIG_FILE = os.Getenv("CONFIG_FILE")
 
@@ -50,4 +51,13 @@ func ListDevices() (devices []Device, err error) {
 	}
 	devicesCache = devices
 	return devices, nil
+}
+
+func GetDevice(address string) Device {
+	for _, device := range devicesCache {
+		if device.Address == address {
+			return device
+		}
+	}
+	return Device{}
 }
