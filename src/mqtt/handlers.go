@@ -3,6 +3,7 @@ package mqtt
 import (
 	"errors"
 	"espips_server/src/database"
+	"espips_server/src/internals"
 	"espips_server/src/utils"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
@@ -50,6 +51,45 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 	rssi := utils.Atoi(strings.Split(payload, ",")[1], "RSSI value received is not a number !")
 	rssiBuffer[sender][scanned] = append(rssiBuffer[sender][scanned], rssi)
 	err = database.Connection.PushRSSI(sender, scanned, rssi, "")
+
+	switch internals.AppState {
+	case internals.INIT_STATE:
+		var trainData map[float64]float64
+		for scanner, entries := range rssiBuffer {
+			for scanned, values := range entries {
+				if len(values) < internals.InitRssiBufferSize {
+					return
+				} else {
+					scannerDev := internals.GetDevice(scanner)
+					scannedDev := internals.GetDevice(scanned)
+
+					if scannerDev.Type != internals.AntennaType {
+						break
+					} else if scannedDev.Type != internals.AntennaType {
+						continue
+					}
+
+					dist := utils.Distance(scannerDev.X, scannerDev.Y, scannedDev.X, scannedDev.Y)
+
+					for _, rssi := range values {
+						trainData[float64(rssi)] = dist
+					}
+				}
+			}
+		}
+		internals.DistanceRssi, err = internals.DistanceRssi.Optimize(trainData)
+		if err != nil {
+			log.Panicln(err)
+		}
+		break
+	case internals.RUN_STATE:
+		if len(rssiBuffer[sender][scanned]) >= internals.RssiBufferSize {
+
+			rssiBuffer[sender][scanned] = nil
+		}
+		break
+	}
+
 	if err != nil {
 		log.Panicln(err)
 	}
