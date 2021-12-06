@@ -5,11 +5,19 @@ import (
 	"log"
 )
 
+type DeviceType uint8
+
+const (
+	AntennaType DeviceType = iota
+	CarType
+)
+
 type Device struct {
-	Address      string  `json:"address"`
-	FriendlyName string  `json:"friendly_name"`
-	X            float64 `json:"x"`
-	Y            float64 `json:"y"`
+	Address      string     `json:"address"`
+	FriendlyName string     `json:"friendly_name"`
+	X            float64    `json:"x"`
+	Y            float64    `json:"y"`
+	Type         DeviceType `json:"type"`
 }
 
 func (d Device) GetX() float64 {
