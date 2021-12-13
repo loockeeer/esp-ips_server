@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-type DeviceType uint8
+type DeviceType int
 
 const (
 	AntennaType DeviceType = iota
@@ -59,6 +59,7 @@ type GraphQLDevice struct {
 	Y            float64 `json:"y"`
 	Speed        float64 `json:"speed"`
 	Battery      float64 `json:"battery"`
+	Type         int     `json:"type"`
 }
 
 type Position struct {

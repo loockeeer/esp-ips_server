@@ -33,6 +33,10 @@ var deviceType = &gql.Object{
 			Description: "Device battery in V",
 			Type:        gql.Float,
 		},
+		"type": &gql.Field{
+			Description: "Device type. 0 = antenna | 1 = car",
+			Type:        gql.Int,
+		},
 	},
 }
 
@@ -59,6 +63,7 @@ var queryType = &gql.Object{
 							Y:            device.Y,
 							Speed:        device.GetSpeed(),
 							Battery:      device.GetBattery(),
+							Type:         int(device.Type),
 						}, nil
 					}
 				}
@@ -72,6 +77,7 @@ var queryType = &gql.Object{
 				devices, _ := internals.ListDevices()
 				var data []internals.GraphQLDevice
 				for _, device := range devices {
+					log.Printf("%d\n", device.Type)
 					data = append(data, internals.GraphQLDevice{
 						Address:      device.Address,
 						FriendlyName: device.FriendlyName,
@@ -79,6 +85,7 @@ var queryType = &gql.Object{
 						Y:            device.Y,
 						Speed:        device.GetSpeed(),
 						Battery:      device.GetBattery(),
+						Type:         int(device.Type),
 					})
 				}
 				return data, nil
