@@ -19,6 +19,9 @@ services:
       - MQTT_PORT
       - API_HOST
       - API_PORT=80
+      - RSSI_BUFFER_SIZE
+      - CONFIG_FILE=/usr/src/app/config.json
+
     env_file:
       - .env
 
@@ -31,22 +34,25 @@ services:
 
   influx:
     image: influxdb:2.1.1-alpine
+    hostname: influx
     environment:
       - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USERNAME}
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASSWORD}
       - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_ORG}
       - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET}
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_TOKEN}
+      - INFLUXD_CONFIG_PATH=/usr/src/app
     env_file:
       - .env
 
     restart: on-failure
     volumes:
       - influx_data:/var/lib/influxdb2
-      - ./config/influxdb:/etc/influxdb2
+      - ./config/influxdb:/usr/src/app
 
   mqtt:
     image: eclipse-mosquitto
+    hostname: influx
     ports:
       - "1885:1883"
 
