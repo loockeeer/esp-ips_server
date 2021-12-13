@@ -6,6 +6,7 @@ import (
 	"fmt"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
+	"log"
 	"time"
 )
 
@@ -25,7 +26,8 @@ var positionCache map[string]Position
 var batteryCache map[string]float64
 
 func Connect(host string, port int, token string, org string, bucket string) *Database {
-	client := influxdb2.NewClient(fmt.Sprintf("http://%s:%d²", host, port), token)
+	log.Println("Connecting with " + token)
+	client := influxdb2.NewClient(fmt.Sprintf("http://%s:%d", host, port), token)
 
 	Connection = &Database{
 		client,
@@ -121,6 +123,10 @@ func (d Database) GetPosition(address string) (position *Position, err error) {
 	}
 	result, err := d.getReadClient().Query(context.Background(), fmt.Sprintf(`
 from(bucket:"%s")
+  |> range(
+	start: -10s,
+	stop: now()
+	)
   |> limit(n: 1)
   |> filter(fn: (r) =>
     r._measurement == "position" and
@@ -131,11 +137,14 @@ from(bucket:"%s")
 	if err != nil {
 		return nil, err
 	} else {
-		result.Next()
-		return &Position{
-			X: result.Record().ValueByKey("x").(float64),
-			Y: result.Record().ValueByKey("y").(float64),
-		}, nil
+		if result.Next() {
+			return &Position{
+				X: result.Record().ValueByKey("x").(float64),
+				Y: result.Record().ValueByKey("y").(float64),
+			}, nil
+		} else {
+			return nil, nil
+		}
 	}
 }
 
@@ -145,6 +154,10 @@ func (d Database) GetBattery(address string) (batteryLevel float64, err error) {
 	}
 	result, err := d.getReadClient().Query(context.Background(), fmt.Sprintf(`
 from(bucket:"%s")
+  |> range(
+	start: -10s,
+	stop: now()
+	)
   |> limit(n: 1)
   |> filter(fn: (r) =>
     r._measurement == "battery" and
@@ -155,15 +168,21 @@ from(bucket:"%s")
 	if err != nil {
 		return -1.0, err
 	} else {
-		result.Next()
-		return result.Record().ValueByKey("battery").(float64), nil
+		if result.Next() {
+			return result.Record().ValueByKey("battery").(float64), nil
+		} else {
+			return -1.0, nil
+		}
 	}
 }
 
 func (d Database) GetRSSIHistory(trainID string) (history map[string]map[string][]float64, err error) {
 	result, err := d.getReadClient().Query(context.Background(), fmt.Sprintf(`
 from(bucket:"%s")
-  |> limit(n: 1)
+  |> range(
+	start: -15m,
+	stop: now()
+	) 
   |> filter(fn: (r) =>
     r._measurement == "rssi" and
 	r.trainID = "%s"
