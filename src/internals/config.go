@@ -3,6 +3,7 @@ package internals
 import (
 	"encoding/json"
 	"espips_server/src/utils"
+	"log"
 	"os"
 )
 
@@ -24,12 +25,12 @@ var (
 	InfluxBucket = os.Getenv("INFLUX_BUCKET")
 )
 
-var RssiBufferSize = utils.Atoi("RSSI_BUFFER_SIZE", "RSSI Buffer size should be number !")
-var InitRssiBufferSize = utils.Atoi("INIT_RSSI_BUFFER_SIZE", "Init RSSI Buffer size should be number !")
+var RssiBufferSize = utils.Atoi(os.Getenv("RSSI_BUFFER_SIZE"), "RSSI Buffer size should be number !")
+var InitRssiBufferSize = utils.Atoi(os.Getenv("INIT_RSSI_BUFFER_SIZE"), "Init RSSI Buffer size should be number !")
 
-var RssiDistanceOrder = utils.Atoi("RSSI_DISTANCE_ORDER", "RSSI-Distance relation order should be number !")
+var RssiDistanceOrder = utils.Atoi(os.Getenv("RSSI_DISTANCE_ORDER"), "RSSI-Distance relation order should be number !")
 
-var CONFIG_FILE = os.Getenv("CONFIG_FILE")
+var ConfigFile = os.Getenv("CONFIG_FILE")
 
 var devicesCache []Device
 
@@ -38,11 +39,11 @@ func ListDevices() (devices []Device, err error) {
 		return devicesCache, nil
 	}
 
-	if CONFIG_FILE == "" {
-		CONFIG_FILE = "config.json"
+	if ConfigFile == "" {
+		ConfigFile = "config.json"
 	}
 
-	file, err := os.ReadFile(CONFIG_FILE)
+	file, err := os.ReadFile(ConfigFile)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,11 @@ func ListDevices() (devices []Device, err error) {
 }
 
 func GetDevice(address string) *Device {
-	for _, device := range devicesCache {
+	devices, err := ListDevices()
+	if err != nil {
+		log.Panicln(err)
+	}
+	for _, device := range devices {
 		if device.Address == address {
 			return &device
 		}
