@@ -12,7 +12,7 @@ func Start(host string, port int) {
 	schema := &gql.Schema{
 		Query:        queryType,
 		Subscription: subscriptionsType,
-		//Mutation:     mutationType,
+		Mutation:     mutationType,
 	}
 
 	executor := gql.DefaultExecutor(schema)

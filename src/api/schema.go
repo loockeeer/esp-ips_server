@@ -145,3 +145,17 @@ var subscriptionsType = &gql.Object{
 		},
 	},
 }
+
+var mutationType = &gql.Object{
+	Name: "Mutation",
+	Fields: gql.Fields{
+		"init": &gql.Field{
+			Description: "Start server initialization",
+			Resolver: func(context gql.Context) (interface{}, error) {
+				internals.AppState = internals.IDLE_STATE
+				ChangeAppState <- internals.AppState
+				return nil, nil
+			},
+		},
+	},
+}
