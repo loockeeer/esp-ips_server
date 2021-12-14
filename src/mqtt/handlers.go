@@ -118,6 +118,18 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 			if err != nil {
 				log.Panicln(err)
 			}
+
+			scannedDevice := internals.GetDevice(scanned)
+			api.PositionEmitter <- internals.GraphQLDevice{
+				Address:      scannedDevice.Address,
+				FriendlyName: scannedDevice.FriendlyName,
+				X:            pos.X,
+				Y:            pos.Y,
+				Speed:        scannedDevice.GetSpeed(),
+				Battery:      scannedDevice.GetBattery(),
+				Type:         int(scannedDevice.Type),
+			}
+
 			break
 		}
 
