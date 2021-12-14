@@ -2,6 +2,7 @@ package mqtt
 
 import (
 	"errors"
+	"espips_server/src/api"
 	"espips_server/src/database"
 	"espips_server/src/internals"
 	"espips_server/src/utils"
@@ -79,9 +80,12 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 				}
 			}
 			internals.DistanceRssi, err = internals.DistanceRssi.Optimize(trainData)
+
 			if err != nil {
 				log.Panicln(err)
 			}
+			internals.AppState = internals.RUN_STATE
+			api.ChangeAppState <- internals.AppState
 			break
 		case internals.RUN_STATE:
 			var data map[internals.Position]float64
@@ -114,6 +118,7 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 			if err != nil {
 				log.Panicln(err)
 			}
+
 			err = database.Connection.PushPosition(scanned, database.Position(*pos))
 			if err != nil {
 				log.Panicln(err)

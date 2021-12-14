@@ -111,13 +111,32 @@ var subscriptionsType = &gql.Object{
 					for {
 						select {
 						case <-ctx.Context().Done():
-							log.Println("Closing a connection")
+							log.Println("Closing a subscription on 'device'")
 							return
 						case data := <-PositionEmitter:
 							if data.Address == ctx.Args()["address"] {
 								log.Printf("Sending %#v\n", data)
 								out <- data
 							}
+						}
+					}
+				}()
+				return out, nil
+			},
+		},
+		"app": &gql.Field{
+			Type:        gql.Int,
+			Description: "Subscribe to app state",
+			Resolver: func(context gql.Context) (interface{}, error) {
+				out := make(chan int)
+				go func() {
+					for {
+						select {
+						case <-context.Context().Done():
+							log.Println("Closing a subscription on 'app'")
+							return
+						case data := <-ChangeAppState:
+							out <- int(data)
 						}
 					}
 				}()
