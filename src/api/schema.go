@@ -57,13 +57,13 @@ var queryType = &gql.Object{
 				for _, device := range devices {
 					if device.Address == ctx.Args()["address"] {
 						return internals.GraphQLDevice{
-							Address:      device.Address,
-							FriendlyName: device.FriendlyName,
-							X:            device.X,
-							Y:            device.Y,
+							Address:      *device.Address,
+							FriendlyName: *device.FriendlyName,
+							X:            device.GetX(),
+							Y:            device.GetY(),
 							Speed:        device.GetSpeed(),
 							Battery:      device.GetBattery(),
-							Type:         int(device.Type),
+							Type:         int(*device.Type),
 						}, nil
 					}
 				}
@@ -79,13 +79,13 @@ var queryType = &gql.Object{
 				for _, device := range devices {
 					log.Printf("%d\n", device.Type)
 					data = append(data, internals.GraphQLDevice{
-						Address:      device.Address,
-						FriendlyName: device.FriendlyName,
-						X:            device.X,
-						Y:            device.Y,
+						Address:      *device.Address,
+						FriendlyName: *device.FriendlyName,
+						X:            device.GetX(),
+						Y:            device.GetY(),
 						Speed:        device.GetSpeed(),
 						Battery:      device.GetBattery(),
-						Type:         int(device.Type),
+						Type:         int(*device.Type),
 					})
 				}
 				return data, nil

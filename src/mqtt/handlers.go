@@ -65,13 +65,13 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 						scannerDev := internals.GetDevice(scanner)
 						scannedDev := internals.GetDevice(scanned)
 
-						if scannerDev.Type != internals.AntennaType {
+						if *scannerDev.Type != internals.AntennaType {
 							break
-						} else if scannedDev.Type != internals.AntennaType {
+						} else if *scannedDev.Type != internals.AntennaType {
 							continue
 						}
 
-						dist := utils.Distance(scannerDev.X, scannerDev.Y, scannedDev.X, scannedDev.Y)
+						dist := utils.Distance(scannerDev.GetX(), scannerDev.GetY(), scannedDev.GetX(), scannedDev.GetY())
 
 						for _, rssi := range values {
 							trainData[float64(rssi)] = dist
@@ -95,8 +95,8 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 					continue
 				}
 				scannerPos := internals.Position{
-					X: senderDevice.X,
-					Y: senderDevice.Y,
+					X: senderDevice.GetX(),
+					Y: senderDevice.GetY(),
 				}
 				for _scanned, values := range entries {
 					if _scanned != scanned {
@@ -126,13 +126,13 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 
 			scannedDevice := internals.GetDevice(scanned)
 			api.PositionEmitter <- internals.GraphQLDevice{
-				Address:      scannedDevice.Address,
-				FriendlyName: scannedDevice.FriendlyName,
+				Address:      *scannedDevice.Address,
+				FriendlyName: *scannedDevice.FriendlyName,
 				X:            pos.X,
 				Y:            pos.Y,
 				Speed:        scannedDevice.GetSpeed(),
 				Battery:      scannedDevice.GetBattery(),
-				Type:         int(scannedDevice.Type),
+				Type:         int(*scannedDevice.Type),
 			}
 
 			break

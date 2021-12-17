@@ -13,15 +13,18 @@ const (
 )
 
 type Device struct {
-	Address      string     `json:"address"`
-	FriendlyName string     `json:"friendly_name"`
-	X            float64    `json:"x"`
-	Y            float64    `json:"y"`
-	Type         DeviceType `json:"type"`
+	Address      *string     `json:"address"`
+	FriendlyName *string     `json:"friendly_name"`
+	x            *float64    `json:"x"`
+	y            *float64    `json:"y"`
+	Type         *DeviceType `json:"type"`
 }
 
 func (d Device) GetX() float64 {
-	result, err := database.Connection.GetPosition(d.Address)
+	if d.x != nil {
+		return *d.x
+	}
+	result, err := database.Connection.GetPosition(*d.Address)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -29,7 +32,10 @@ func (d Device) GetX() float64 {
 }
 
 func (d Device) GetY() float64 {
-	result, err := database.Connection.GetPosition(d.Address)
+	if d.y != nil {
+		return *d.y
+	}
+	result, err := database.Connection.GetPosition(*d.Address)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -37,7 +43,7 @@ func (d Device) GetY() float64 {
 }
 
 func (d Device) GetSpeed() float64 {
-	result, err := database.Connection.GetSpeed(d.Address)
+	result, err := database.Connection.GetSpeed(*d.Address)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -45,7 +51,7 @@ func (d Device) GetSpeed() float64 {
 }
 
 func (d Device) GetBattery() float64 {
-	result, err := database.Connection.GetBattery(d.Address)
+	result, err := database.Connection.GetBattery(*d.Address)
 	if err != nil {
 		log.Panicln(err)
 	}

@@ -2,6 +2,7 @@ package internals
 
 import (
 	"encoding/json"
+	"errors"
 	"espips_server/src/utils"
 	"log"
 	"os"
@@ -52,6 +53,22 @@ func ListDevices() (devices []Device, err error) {
 	if err != nil {
 		return nil, err
 	}
+	for i, device := range devices {
+		if device.Address == nil {
+			return nil, errors.New("Missing address for device at index " + string(i))
+		}
+		if device.Type == nil {
+			return nil, errors.New("Missing type for device " + *device.Address)
+		}
+		if *device.Type == AntennaType {
+			if device.x == nil {
+				return nil, errors.New("Missing X value for antenna" + *device.Address)
+			}
+			if device.y == nil {
+				return nil, errors.New("Missing Y value for antenna" + *device.Address)
+			}
+		}
+	}
 	devicesCache = devices
 	return devices, nil
 }
@@ -62,7 +79,7 @@ func GetDevice(address string) *Device {
 		log.Panicln(err)
 	}
 	for _, device := range devices {
-		if device.Address == address {
+		if *device.Address == address {
 			return &device
 		}
 	}

@@ -18,8 +18,9 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
+
 	for _, device := range devices {
-		log.Printf("Loaded device %s (AKA %s)\n", device.Address, device.FriendlyName)
+		log.Printf("Loaded device %s (AKA %s)\n", *device.Address, *device.FriendlyName)
 	}
 	log.Println("Devices loaded")
 
