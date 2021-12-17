@@ -6,6 +6,7 @@ import (
 	"espips_server/src/database"
 	"espips_server/src/internals"
 	"espips_server/src/utils"
+	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"strconv"
@@ -37,6 +38,31 @@ func ccHandler(client mqtt.Client, message mqtt.Message) {
 	switch payload {
 	case "4":
 		log.Printf("Received ack from %s\n", address)
+		dev := internals.GetDevice(address)
+		if dev == nil {
+			break
+		}
+
+		payload := ""
+		if internals.AppState == internals.IDLE_STATE {
+			payload = "3"
+		}
+		if *dev.Type == internals.AntennaType {
+			if internals.AppState == internals.RUN_STATE {
+				payload = "2"
+			} else if internals.AppState == internals.INIT_STATE {
+				payload = "1"
+			}
+		} else if *dev.Type == internals.CarType {
+			if internals.AppState == internals.RUN_STATE {
+				payload = "0"
+			} else {
+				payload = "3"
+			}
+		}
+
+		client.Publish(fmt.Sprintf("cc/%s", address), 2, false, payload)
+
 		break
 	}
 }

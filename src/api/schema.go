@@ -2,6 +2,7 @@ package api
 
 import (
 	"espips_server/src/internals"
+	"espips_server/src/mqtt"
 	"github.com/rigglo/gql"
 	"log"
 )
@@ -149,11 +150,18 @@ var subscriptionsType = &gql.Object{
 var mutationType = &gql.Object{
 	Name: "Mutation",
 	Fields: gql.Fields{
-		"init": &gql.Field{
-			Description: "Start server initialization",
+		"setMode": &gql.Field{
+			Description: "Change app state",
+			Arguments: gql.Arguments{
+				"mode": &gql.Argument{
+					Type:        gql.Int,
+					Description: "The mode to set the app to",
+				},
+			},
 			Resolver: func(context gql.Context) (interface{}, error) {
-				internals.AppState = internals.IDLE_STATE
+				internals.AppState = context.Args()["mode"].(internals.State)
 				ChangeAppState <- internals.AppState
+				mqtt.GlobalControl(internals.AppState)
 				return nil, nil
 			},
 		},
