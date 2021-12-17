@@ -6,9 +6,11 @@ services:
     links:
       - influx
       - mqtt
+
     depends_on:
       - influx
       - mqtt
+
     environment:
       - INFLUX_PORT
       - INFLUX_HOST=influx
@@ -27,6 +29,7 @@ services:
 
     ports:
       - "8080:80"
+
     volumes:
       - ./config/server/config.json:/usr/src/app/config.json
 
@@ -52,7 +55,7 @@ services:
 
   mqtt:
     image: eclipse-mosquitto
-    hostname: influx
+    hostname: mqtt
     ports:
       - "1885:1883"
 
