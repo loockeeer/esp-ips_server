@@ -28,7 +28,7 @@ services:
       - .env
 
     ports:
-      - "8080:80"
+      - "${EXPOSE_PORT}:80"
 
     volumes:
       - ./config/server/config.json:/usr/src/app/config.json
