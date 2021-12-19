@@ -4,7 +4,6 @@ import (
 	"espips_server/src/api"
 	"espips_server/src/database"
 	"espips_server/src/internals"
-	"espips_server/src/mqtt"
 	"log"
 	"sync"
 )
@@ -40,7 +39,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		mqtt.Connect(internals.MqttHost, internals.MqttPort)
+		api.ConnectMQTT(internals.MqttHost, internals.MqttPort)
 	}()
 
 	// Start GraphQL API (Blocking)
@@ -48,7 +47,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		api.Start(internals.ApiHost, internals.ApiPort)
+		api.StartGraphql(internals.ApiHost, internals.ApiPort)
 	}()
 
 	wg.Wait()

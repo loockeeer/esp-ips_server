@@ -1,8 +1,7 @@
-package mqtt
+package api
 
 import (
 	"errors"
-	"espips_server/src/api"
 	"espips_server/src/database"
 	"espips_server/src/internals"
 	"espips_server/src/utils"
@@ -111,7 +110,7 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 				log.Panicln(err)
 			}
 			internals.AppState = internals.RUN_STATE
-			api.ChangeAppState <- internals.AppState
+			ChangeAppState <- internals.AppState
 			break
 		case internals.RUN_STATE:
 			var data map[internals.Position]float64
@@ -151,7 +150,7 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 			}
 
 			scannedDevice := internals.GetDevice(scanned)
-			api.PositionEmitter <- internals.GraphQLDevice{
+			PositionEmitter <- internals.GraphQLDevice{
 				Address:      *scannedDevice.Address,
 				FriendlyName: *scannedDevice.FriendlyName,
 				X:            pos.X,

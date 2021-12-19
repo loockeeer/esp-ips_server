@@ -2,7 +2,6 @@ package api
 
 import (
 	"espips_server/src/internals"
-	"espips_server/src/mqtt"
 	"github.com/rigglo/gql"
 	"log"
 )
@@ -161,7 +160,7 @@ var mutationType = &gql.Object{
 			Resolver: func(context gql.Context) (interface{}, error) {
 				internals.AppState = context.Args()["mode"].(internals.State)
 				ChangeAppState <- internals.AppState
-				mqtt.GlobalControl(internals.AppState)
+				GlobalControl(internals.AppState)
 				return nil, nil
 			},
 		},

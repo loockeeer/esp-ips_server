@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func Start(host string, port int) {
+func StartGraphql(host string, port int) {
 	schema := &gql.Schema{
 		Query:        queryType,
 		Subscription: subscriptionsType,

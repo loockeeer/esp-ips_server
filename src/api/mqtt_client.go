@@ -1,4 +1,4 @@
-package mqtt
+package api
 
 import (
 	"espips_server/src/internals"
@@ -9,7 +9,7 @@ import (
 
 var client pahoMqtt.Client
 
-func Connect(host string, port int) {
+func ConnectMQTT(host string, port int) {
 	opts := pahoMqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", host, port))
 	opts.SetClientID("server")
