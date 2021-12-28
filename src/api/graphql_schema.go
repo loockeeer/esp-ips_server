@@ -46,10 +46,10 @@ var queryType = &gql.Object{
 		"device": &gql.Field{
 			Type:        deviceType,
 			Description: "Get device by address",
-
 			Arguments: gql.Arguments{
 				"address": &gql.Argument{
-					Type: gql.String,
+					Type:        gql.String,
+					Description: "The address of the device to fetch",
 				},
 			},
 			Resolver: func(ctx gql.Context) (interface{}, error) {
@@ -74,10 +74,15 @@ var queryType = &gql.Object{
 			Type:        gql.NewList(deviceType),
 			Description: "Get device list",
 			Resolver: func(ctx gql.Context) (interface{}, error) {
-				devices, _ := internals.ListDevices()
+				devices, err := internals.ListDevices()
+				if err != nil {
+					return nil, err
+				}
+				if devices == nil {
+					return nil, nil
+				}
 				var data []internals.GraphQLDevice
 				for _, device := range devices {
-					log.Printf("%d\n", device.Type)
 					data = append(data, internals.GraphQLDevice{
 						Address:      *device.Address,
 						FriendlyName: *device.FriendlyName,
@@ -94,15 +99,16 @@ var queryType = &gql.Object{
 	},
 }
 
-var subscriptionsType = &gql.Object{
-	Name: "Subscriptions",
+var subscriptionType = &gql.Object{
+	Name: "Subscription",
 	Fields: gql.Fields{
 		"device": &gql.Field{
 			Type:        deviceType,
 			Description: "Subscribe to device data",
 			Arguments: gql.Arguments{
 				"address": &gql.Argument{
-					Type: gql.String,
+					Type:        gql.String,
+					Description: "The address of the device to subscribe to",
 				},
 			},
 			Resolver: func(ctx gql.Context) (interface{}, error) {

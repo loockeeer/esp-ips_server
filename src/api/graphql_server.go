@@ -5,14 +5,15 @@ import (
 	"github.com/rigglo/gql"
 	"github.com/rigglo/gql/pkg/handler"
 	"github.com/rigglo/gqlws"
+	"log"
 	"net/http"
 )
 
 func StartGraphql(host string, port int) {
 	schema := &gql.Schema{
 		Query:        queryType,
-		Subscription: subscriptionsType,
-		Mutation:     mutationType,
+		Subscription: subscriptionType,
+		//Mutation:     mutationType,
 	}
 
 	executor := gql.DefaultExecutor(schema)
@@ -40,6 +41,6 @@ func StartGraphql(host string, port int) {
 	http.Handle("/graphql", wsQL)
 	http.Handle("/graphiql", wsIQL)
 	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), nil); err != nil {
-		panic(err)
+		log.Panicln(err)
 	}
 }

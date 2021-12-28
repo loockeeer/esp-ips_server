@@ -55,17 +55,17 @@ func ListDevices() (devices []Device, err error) {
 	}
 	for i, device := range devices {
 		if device.Address == nil {
-			return nil, errors.New("Missing address for device at index " + string(i))
+			return nil, errors.New("Missing address for device at index " + string(rune(i)))
 		}
 		if device.Type == nil {
 			return nil, errors.New("Missing type for device " + *device.Address)
 		}
 		if *device.Type == AntennaType {
-			if device.x == nil {
-				return nil, errors.New("Missing X value for antenna" + *device.Address)
+			if device.X == nil {
+				return nil, errors.New("Missing X value for antenna " + *device.Address)
 			}
-			if device.y == nil {
-				return nil, errors.New("Missing Y value for antenna" + *device.Address)
+			if device.Y == nil {
+				return nil, errors.New("Missing Y value for antenna " + *device.Address)
 			}
 		}
 	}

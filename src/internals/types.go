@@ -15,14 +15,14 @@ const (
 type Device struct {
 	Address      *string     `json:"address"`
 	FriendlyName *string     `json:"friendly_name"`
-	x            *float64    `json:"x"`
-	y            *float64    `json:"y"`
+	X            *float64    `json:"x"`
+	Y            *float64    `json:"y"`
 	Type         *DeviceType `json:"type"`
 }
 
 func (d Device) GetX() float64 {
-	if d.x != nil {
-		return *d.x
+	if d.X != nil {
+		return *d.X
 	}
 	result, err := database.Connection.GetPosition(*d.Address)
 	if err != nil {
@@ -32,8 +32,8 @@ func (d Device) GetX() float64 {
 }
 
 func (d Device) GetY() float64 {
-	if d.y != nil {
-		return *d.y
+	if d.Y != nil {
+		return *d.Y
 	}
 	result, err := database.Connection.GetPosition(*d.Address)
 	if err != nil {
