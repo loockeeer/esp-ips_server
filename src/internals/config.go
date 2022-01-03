@@ -8,16 +8,19 @@ import (
 	"os"
 )
 
+// MQTT related config
 var (
 	MqttHost = os.Getenv("MQTT_HOST")
 	MqttPort = utils.Atoi(os.Getenv("MQTT_PORT"), "MQTT port should be number !")
 )
 
+// Graphql related config
 var (
 	ApiHost = os.Getenv("API_HOST")
 	ApiPort = utils.Atoi(os.Getenv("API_PORT"), "API port should be number !")
 )
 
+// Influx related config
 var (
 	InfluxHost   = os.Getenv("INFLUX_HOST")
 	InfluxPort   = utils.Atoi(os.Getenv("INFLUX_PORT"), "Influx port should be number !")
