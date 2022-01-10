@@ -2,6 +2,7 @@ package api
 
 import (
 	"espips_server/src/internals"
+	"fmt"
 	"github.com/rigglo/gql"
 	"log"
 )
@@ -112,15 +113,18 @@ var subscriptionType = &gql.Object{
 				},
 			},
 			Resolver: func(ctx gql.Context) (interface{}, error) {
-				out := make(chan internals.GraphQLDevice)
+				out := make(chan interface{})
+				ch := make(chan interface{})
+				PositionEvent.Listen(ch)
 				go func() {
 					for {
 						select {
 						case <-ctx.Context().Done():
+							PositionEvent.RemoveListener(ch)
 							log.Println("Closing a subscription on 'device'")
 							return
-						case data := <-PositionEmitter:
-							if data.Address == ctx.Args()["address"] {
+						case data := <-ch:
+							if data.(internals.GraphQLDevice).Address == ctx.Args()["address"] {
 								log.Printf("Sending %#v\n", data)
 								out <- data
 							}
@@ -134,19 +138,19 @@ var subscriptionType = &gql.Object{
 			Type:        gql.Int,
 			Description: "Subscribe to app state",
 			Resolver: func(context gql.Context) (interface{}, error) {
-				out := make(chan int)
+				ch := make(chan interface{})
+				AppStateChangeEvent.Listen(ch)
 				go func() {
 					for {
 						select {
 						case <-context.Context().Done():
+							AppStateChangeEvent.RemoveListener(ch)
 							log.Println("Closing a subscription on 'app'")
 							return
-						case data := <-ChangeAppState:
-							out <- int(data)
 						}
 					}
 				}()
-				return out, nil
+				return ch, nil
 			},
 		},
 	},
@@ -163,11 +167,14 @@ var mutationType = &gql.Object{
 					Description: "The mode to set the app to",
 				},
 			},
+			Type: gql.Boolean,
 			Resolver: func(context gql.Context) (interface{}, error) {
-				internals.AppState = context.Args()["mode"].(internals.State)
-				ChangeAppState <- internals.AppState
+				internals.AppState = context.Args()["mode"].(int)
+				fmt.Println(context.Args()["mode"].(int))
+				fmt.Println(internals.AppState)
 				GlobalControl(internals.AppState)
-				return nil, nil
+				go AppStateChangeEvent.Emit(internals.AppState)
+				return true, nil
 			},
 		},
 	},

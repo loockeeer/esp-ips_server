@@ -1,6 +1,7 @@
 package internals
 
 import (
+	"fmt"
 	"gonum.org/v1/gonum/diff/fd"
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/optimize"
@@ -26,7 +27,10 @@ func (p Vector) CustomOptimize(cost func(vector Vector) float64) (newVector Vect
 		Hess: hess,
 	}
 
-	result, err := optimize.Minimize(problem, p, nil, &optimize.BFGS{})
+	result, err := optimize.Minimize(problem, p, &optimize.Settings{
+		GradientThreshold: 1,
+		Concurrent:        30,
+	}, &optimize.BFGS{})
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +48,7 @@ func (p Polynomial) Execute(x float64) float64 {
 }
 
 func (p Polynomial) Optimize(data map[float64]float64) (poly Polynomial, err error) {
+	fmt.Println(data)
 	errorFunc := func(x Vector) float64 {
 		result := 0.0
 		for key, value := range data {

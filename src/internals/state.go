@@ -1,11 +1,9 @@
 package internals
 
-type State uint8
-
 const (
-	IDLE_STATE State = iota
+	IDLE_STATE = iota
 	RUN_STATE
 	INIT_STATE
 )
 
-var AppState State = IDLE_STATE
+var AppState = IDLE_STATE

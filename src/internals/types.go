@@ -28,6 +28,9 @@ func (d Device) GetX() float64 {
 	if err != nil {
 		log.Panicln(err)
 	}
+	if result == nil {
+		return 0.0
+	}
 	return result.X
 }
 
@@ -38,6 +41,9 @@ func (d Device) GetY() float64 {
 	result, err := database.Connection.GetPosition(*d.Address)
 	if err != nil {
 		log.Panicln(err)
+	}
+	if result == nil {
+		return 0.0
 	}
 	return result.Y
 }

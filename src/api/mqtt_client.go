@@ -17,10 +17,6 @@ func ConnectMQTT(host string, port int) {
 
 	client = pahoMqtt.NewClient(opts)
 
-	client.Subscribe("cc/*", 2, ccHandler)
-	client.Subscribe("rssi/*", 2, rssiHandler)
-	client.Subscribe("battery/*", 2, batteryHandler)
-
 	log.Println("Connected to broker")
 
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
@@ -28,10 +24,17 @@ func ConnectMQTT(host string, port int) {
 	}
 }
 
-func GlobalControl(state internals.State) {
+func GlobalControl(state int) {
 	devices, _ := internals.ListDevices()
 	for _, device := range devices {
 		payload := ""
+
+		/*
+			#define CARMODE 0
+			#define ANTENNAMODE_INIT 1
+			#define ANTENNAMODE_RUN 2
+			#define IDLE_MODE 3
+		*/
 		if state == internals.IDLE_STATE {
 			payload = "3"
 		}

@@ -138,6 +138,12 @@ from(bucket:"%s")
 		return nil, err
 	} else {
 		if result.Next() {
+			if _, ok := result.Record().Values()["x"]; !ok {
+				return nil, nil
+			}
+			if _, ok := result.Record().Values()["y"]; !ok {
+				return nil, nil
+			}
 			return &Position{
 				X: result.Record().ValueByKey("x").(float64),
 				Y: result.Record().ValueByKey("y").(float64),

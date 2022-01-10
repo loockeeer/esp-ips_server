@@ -1,9 +1,11 @@
 package api
 
-import "espips_server/src/internals"
+import (
+	"espips_server/src/utils"
+)
 
-// PositionEmitter Push to this signal to emit a device when its position changes
-var PositionEmitter = make(chan internals.GraphQLDevice)
+// PositionEvent Push to this signal to emit a device when its position changes
+var PositionEvent = &utils.EventEmitter{}
 
-// ChangeAppState Push to this signal to emit when app state is changed
-var ChangeAppState = make(chan internals.State)
+// AppStateChangeEvent Push to this signal to emit when app state is changed
+var AppStateChangeEvent = &utils.EventEmitter{}

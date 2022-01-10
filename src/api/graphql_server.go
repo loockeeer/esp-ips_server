@@ -13,7 +13,7 @@ func StartGraphql(host string, port int) {
 	schema := &gql.Schema{
 		Query:        queryType,
 		Subscription: subscriptionType,
-		//Mutation:     mutationType,
+		Mutation:     mutationType,
 	}
 
 	executor := gql.DefaultExecutor(schema)

@@ -13,11 +13,14 @@ import (
 )
 
 var (
-	rssiBuffer map[string]map[string][]int
+	rssiBuffer = map[string]map[string][]int{}
 )
 
 func onConnect(client mqtt.Client) {
 	log.Println("MQTT Connected")
+	client.Subscribe("cc/+", 2, ccHandler)
+	client.Subscribe("rssi/+", 2, rssiHandler)
+	client.Subscribe("battery/+", 2, batteryHandler)
 }
 
 func getMessageInfo(message mqtt.Message) (address string, payload string, err error) {
@@ -45,8 +48,7 @@ func ccHandler(client mqtt.Client, message mqtt.Message) {
 		payload := ""
 		if internals.AppState == internals.IDLE_STATE {
 			payload = "3"
-		}
-		if *dev.Type == internals.AntennaType {
+		} else if *dev.Type == internals.AntennaType {
 			if internals.AppState == internals.RUN_STATE {
 				payload = "2"
 			} else if internals.AppState == internals.INIT_STATE {
@@ -71,99 +73,102 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 	if err != nil {
 		log.Panicln(err)
 	}
-	log.Printf("Received RSSI (%s) from %s\n", payload, sender)
 
 	scanned := strings.Split(payload, ",")[0]
-	rssi := utils.Atoi(strings.Split(payload, ",")[1], "RSSI value received is not a number !")
+	rssi, err := strconv.Atoi(strings.Split(payload, ",")[1])
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if rssiBuffer[sender] == nil {
+		rssiBuffer[sender] = map[string][]int{}
+	}
 	rssiBuffer[sender][scanned] = append(rssiBuffer[sender][scanned], rssi)
-	err = database.Connection.PushRSSI(sender, scanned, rssi, "")
+	database.Connection.PushRSSI(sender, scanned, rssi, "")
+	switch internals.AppState {
+	case internals.INIT_STATE:
+		var trainData = map[float64]float64{}
+		for scanner, entries := range rssiBuffer {
+			for scanned, values := range entries {
+				if len(values) < internals.InitRssiBufferSize {
+					return
+				} else {
+					scannerDev := internals.GetDevice(scanner)
+					scannedDev := internals.GetDevice(scanned)
 
-	go func() {
-		switch internals.AppState {
-		case internals.INIT_STATE:
-			var trainData map[float64]float64
-			for scanner, entries := range rssiBuffer {
-				for scanned, values := range entries {
-					if len(values) < internals.InitRssiBufferSize {
-						return
-					} else {
-						scannerDev := internals.GetDevice(scanner)
-						scannedDev := internals.GetDevice(scanned)
-
-						if *scannerDev.Type != internals.AntennaType {
-							break
-						} else if *scannedDev.Type != internals.AntennaType {
-							continue
-						}
-
-						dist := utils.Distance(scannerDev.GetX(), scannerDev.GetY(), scannedDev.GetX(), scannedDev.GetY())
-
-						for _, rssi := range values {
-							trainData[float64(rssi)] = dist
-						}
-					}
-				}
-			}
-			internals.DistanceRssi, err = internals.DistanceRssi.Optimize(trainData)
-
-			if err != nil {
-				log.Panicln(err)
-			}
-			internals.AppState = internals.RUN_STATE
-			ChangeAppState <- internals.AppState
-			break
-		case internals.RUN_STATE:
-			var data map[internals.Position]float64
-			for sender, entries := range rssiBuffer {
-				senderDevice := internals.GetDevice(sender)
-				if senderDevice == nil {
-					continue
-				}
-				scannerPos := internals.Position{
-					X: senderDevice.GetX(),
-					Y: senderDevice.GetY(),
-				}
-				for _scanned, values := range entries {
-					if _scanned != scanned {
+					if *scannerDev.Type != internals.AntennaType {
+						break
+					} else if *scannedDev.Type != internals.AntennaType {
 						continue
 					}
-					if len(values) < internals.RssiBufferSize {
-						return
-					}
-					avgRSSI := 0.0
+
+					dist := utils.Distance(scannerDev.GetX(), scannerDev.GetY(), scannedDev.GetX(), scannedDev.GetY())
+
 					for _, rssi := range values {
-						avgRSSI += float64(rssi)
+						trainData[float64(rssi)] = dist
 					}
-					avgRSSI /= float64(len(values))
-					data[scannerPos] = internals.DistanceRssi.Execute(avgRSSI)
-					rssiBuffer[sender][scanned] = nil
 				}
 			}
-			pos, err := internals.GetPosition(data)
-			if err != nil {
-				log.Panicln(err)
-			}
+		}
+		internals.DistanceRssi, err = internals.DistanceRssi.Optimize(trainData)
 
-			err = database.Connection.PushPosition(scanned, database.Position(*pos))
-			if err != nil {
-				log.Panicln(err)
+		if err != nil {
+			log.Println("Failed to init distance-rssi model : ", err)
+		}
+		internals.AppState = internals.RUN_STATE
+		go AppStateChangeEvent.Emit(internals.AppState)
+		rssiBuffer = map[string]map[string][]int{}
+		break
+	case internals.RUN_STATE:
+		var data map[internals.Position]float64
+		for sender, entries := range rssiBuffer {
+			senderDevice := internals.GetDevice(sender)
+			if senderDevice == nil {
+				continue
 			}
-
-			scannedDevice := internals.GetDevice(scanned)
-			PositionEmitter <- internals.GraphQLDevice{
-				Address:      *scannedDevice.Address,
-				FriendlyName: *scannedDevice.FriendlyName,
-				X:            pos.X,
-				Y:            pos.Y,
-				Speed:        scannedDevice.GetSpeed(),
-				Battery:      scannedDevice.GetBattery(),
-				Type:         int(*scannedDevice.Type),
+			scannerPos := internals.Position{
+				X: senderDevice.GetX(),
+				Y: senderDevice.GetY(),
 			}
-
-			break
+			for _scanned, values := range entries {
+				if _scanned != scanned {
+					continue
+				}
+				if len(values) < internals.RssiBufferSize {
+					return
+				}
+				avgRSSI := 0.0
+				for _, rssi := range values {
+					avgRSSI += float64(rssi)
+				}
+				avgRSSI /= float64(len(values))
+				data[scannerPos] = internals.DistanceRssi.Execute(avgRSSI)
+				rssiBuffer[sender][scanned] = nil
+			}
+		}
+		pos, err := internals.GetPosition(data)
+		if err != nil {
+			log.Panicln(err)
 		}
 
-	}()
+		err = database.Connection.PushPosition(scanned, database.Position(*pos))
+		if err != nil {
+			log.Panicln(err)
+		}
+
+		scannedDevice := internals.GetDevice(scanned)
+		PositionEvent.Emit(internals.GraphQLDevice{
+			Address:      *scannedDevice.Address,
+			FriendlyName: *scannedDevice.FriendlyName,
+			X:            pos.X,
+			Y:            pos.Y,
+			Speed:        scannedDevice.GetSpeed(),
+			Battery:      scannedDevice.GetBattery(),
+			Type:         int(*scannedDevice.Type),
+		})
+
+		break
+	}
 	if err != nil {
 		log.Panicln(err)
 	}
