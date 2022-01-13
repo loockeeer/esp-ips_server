@@ -35,7 +35,7 @@ var deviceType = &gql.Object{
 			Type:        gql.Float,
 		},
 		"type": &gql.Field{
-			Description: "Device type. 0 = antenna | 1 = car",
+			Description: "Device type. 0 = station | 1 = beacon",
 			Type:        gql.Int,
 		},
 	},

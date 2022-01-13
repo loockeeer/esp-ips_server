@@ -31,38 +31,38 @@ class Device:
         return self.type == 3
 
     @property
-    def antenna(self):
+    def station(self):
         return self.type == 1 or self.type == 2
 
     @property
-    def antennaRun(self):
+    def stationRun(self):
         return self.type == 2
 
     @property
-    def car(self):
+    def beacon(self):
         return self.type == 0
 
     def loop(self, devices, client):
-        if self.antenna:
+        if self.station:
             for other in devices:
                 if other.address == self.address: continue
-                if self.antennaRun and other.car:
+                if self.stationRun and other.beacon:
                     distance = dist(self.x, self.y, other.x, other.y) + random.randrange(-2, 2)
                     rssi = dist2rssi(distance)
                     print(self.address, other.address, rssi, distance)
                     client.publish(f"rssi/{self.address}", f"{other.address},{str(int(rssi))}")
 
-                if self.antenna and not self.antennaRun and other.antenna and not other.antennaRun:
+                if self.station and not self.stationRun and other.station and not other.stationRun:
                     distance = dist(self.x, self.y, other.x, other.y) + random.randrange(-2, 2)
                     rssi = dist2rssi(distance)
                     print(self.address, other.address, rssi, distance)
                     client.publish(f"rssi/{self.address}", f"{other.address},{str(int(rssi))}")
-        elif self.car:
+        elif self.beacon:
             self.angle += 0.001
             self.x, self.y = get_coords(self.angle)
 
     def ack(self, client):
-        if not self.antenna: return
+        if not self.station: return
         client.publish(f"cc/{self.address}", "4")
 
 def main(mqtt_host, mqtt_port, devices):

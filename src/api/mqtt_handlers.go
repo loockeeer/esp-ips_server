@@ -48,13 +48,13 @@ func ccHandler(client mqtt.Client, message mqtt.Message) {
 		payload := ""
 		if internals.AppState == internals.IDLE_STATE {
 			payload = "3"
-		} else if *dev.Type == internals.AntennaType {
+		} else if *dev.Type == internals.StationType {
 			if internals.AppState == internals.RUN_STATE {
 				payload = "2"
 			} else if internals.AppState == internals.INIT_STATE {
 				payload = "1"
 			}
-		} else if *dev.Type == internals.CarType {
+		} else if *dev.Type == internals.BeaconType {
 			if internals.AppState == internals.RUN_STATE {
 				payload = "0"
 			} else {
@@ -96,9 +96,9 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 					scannerDev := internals.GetDevice(scanner)
 					scannedDev := internals.GetDevice(scanned)
 
-					if *scannerDev.Type != internals.AntennaType {
+					if *scannerDev.Type != internals.StationType {
 						break
-					} else if *scannedDev.Type != internals.AntennaType {
+					} else if *scannedDev.Type != internals.StationType {
 						continue
 					}
 
