@@ -68,7 +68,7 @@ func ccHandler(client mqtt.Client, message mqtt.Message) {
 	}
 }
 
-func rssiHandler(client mqtt.Client, message mqtt.Message) {
+func rssiHandler(_ mqtt.Client, message mqtt.Message) {
 	sender, payload, err := getMessageInfo(message)
 	if err != nil {
 		log.Panicln(err)
@@ -84,7 +84,7 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 		rssiBuffer[sender] = map[string][]int{}
 	}
 	rssiBuffer[sender][scanned] = append(rssiBuffer[sender][scanned], rssi)
-	database.Connection.PushRSSI(sender, scanned, rssi, "")
+	_ = database.Connection.PushRSSI(sender, scanned, rssi, "")
 	switch internals.AppState {
 	case internals.INIT_STATE:
 		var trainData = map[float64]float64{}
@@ -101,8 +101,7 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 					} else if *scannedDev.Type != internals.AntennaType {
 						continue
 					}
-
-					dist := utils.Distance(scannerDev.GetX(), scannerDev.GetY(), scannedDev.GetX(), scannedDev.GetY())
+					dist := utils.Distance(scannerDev.GetPosition().X, scannerDev.GetPosition().Y, scannedDev.GetPosition().X, scannedDev.GetPosition().Y)
 
 					for _, rssi := range values {
 						trainData[float64(rssi)] = dist
@@ -114,21 +113,23 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 
 		if err != nil {
 			log.Println("Failed to init distance-rssi model : ", err)
+		} else {
+			log.Println(internals.DistanceRssi)
 		}
 		internals.AppState = internals.RUN_STATE
-		go AppStateChangeEvent.Emit(internals.AppState)
+		GlobalControl(internals.AppState)
 		rssiBuffer = map[string]map[string][]int{}
 		break
 	case internals.RUN_STATE:
-		var data map[internals.Position]float64
+		var data = map[internals.Position]float64{}
+		scannedDevice := internals.GetDevice(scanned)
+		if *scannedDevice.Type != 1 {
+			break
+		}
 		for sender, entries := range rssiBuffer {
 			senderDevice := internals.GetDevice(sender)
 			if senderDevice == nil {
 				continue
-			}
-			scannerPos := internals.Position{
-				X: senderDevice.GetX(),
-				Y: senderDevice.GetY(),
 			}
 			for _scanned, values := range entries {
 				if _scanned != scanned {
@@ -142,7 +143,8 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 					avgRSSI += float64(rssi)
 				}
 				avgRSSI /= float64(len(values))
-				data[scannerPos] = internals.DistanceRssi.Execute(avgRSSI)
+				data[*senderDevice.GetPosition()] = internals.DistanceRssi.Execute(avgRSSI)
+				log.Println(avgRSSI, data[*senderDevice.GetPosition()])
 				rssiBuffer[sender][scanned] = nil
 			}
 		}
@@ -151,12 +153,10 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 			log.Panicln(err)
 		}
 
-		err = database.Connection.PushPosition(scanned, database.Position(*pos))
+		err = scannedDevice.SetPosition(pos)
 		if err != nil {
 			log.Panicln(err)
 		}
-
-		scannedDevice := internals.GetDevice(scanned)
 		PositionEvent.Emit(internals.GraphQLDevice{
 			Address:      *scannedDevice.Address,
 			FriendlyName: *scannedDevice.FriendlyName,
@@ -166,6 +166,7 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 			Battery:      scannedDevice.GetBattery(),
 			Type:         int(*scannedDevice.Type),
 		})
+		log.Printf("X : %f | Y : %f\n", pos.X, pos.Y)
 
 		break
 	}
@@ -174,7 +175,7 @@ func rssiHandler(client mqtt.Client, message mqtt.Message) {
 	}
 }
 
-func batteryHandler(client mqtt.Client, message mqtt.Message) {
+func batteryHandler(_ mqtt.Client, message mqtt.Message) {
 	address, payload, err := getMessageInfo(message)
 	if err != nil {
 		log.Panicln(err)

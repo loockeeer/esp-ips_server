@@ -25,6 +25,7 @@ func ConnectMQTT(host string, port int) {
 }
 
 func GlobalControl(state int) {
+	go AppStateChangeEvent.Emit(internals.AppState)
 	devices, _ := internals.ListDevices()
 	for _, device := range devices {
 		payload := ""

@@ -7,15 +7,15 @@ import threading
 from paho.mqtt import client as mqtt_client
 import json
 
+
 def dist2rssi(distance):
-    N = 2
-    return -(math.log(distance)*10*N)
+    distance = abs(distance)
+    return 10 * 2 * math.log(distance) + 20 * math.log((4 * math.pi) / 0.125)
+
 
 def dist(x1, y1, x2, y2):
-    return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    return abs(math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2))
 
-def get_coords(angle):
-    return math.cos(angle), math.sin(angle)
 
 class Device:
     def __init__(self, address, friendly_name, x, y):
@@ -49,21 +49,27 @@ class Device:
                 if self.antennaRun and other.car:
                     distance = dist(self.x, self.y, other.x, other.y) + random.randrange(-2, 2)
                     rssi = dist2rssi(distance)
-                    print(self.address, other.address, rssi, distance)
                     client.publish(f"rssi/{self.address}", f"{other.address},{str(int(rssi))}")
 
                 if self.antenna and not self.antennaRun and other.antenna and not other.antennaRun:
                     distance = dist(self.x, self.y, other.x, other.y) + random.randrange(-2, 2)
                     rssi = dist2rssi(distance)
-                    print(self.address, other.address, rssi, distance)
+                    print(distance, rssi)
+
                     client.publish(f"rssi/{self.address}", f"{other.address},{str(int(rssi))}")
         elif self.car:
-            self.angle += 0.001
-            self.x, self.y = get_coords(self.angle)
+            self.angle += 0.1
+            #self.x, self.y = math.cos(self.angle) * 13, math.sin(self.angle) * 13
+            self.x, self.y = 10, 6
+            #print(self.x, self.y)
 
     def ack(self, client):
         if not self.antenna: return
         client.publish(f"cc/{self.address}", "4")
+
+    def __repr__(self):
+        return f"[device type={'antenna' if self.antenna else 'car'} id={self.address} name={self.friendly_name}]"
+
 
 def main(mqtt_host, mqtt_port, devices):
     def on_message(client, userdata, message):
@@ -76,7 +82,8 @@ def main(mqtt_host, mqtt_port, devices):
                     if content == "4": continue
                     print(f"Device {device.friendly_name} switched to {content}")
                     device.type = int(content)
-                    #device.ack(client)
+                    devices.sort(key=lambda device: 1 if device.antenna else 0)
+                # device.ack(client)
 
     def on_connect(client, userdata, flags, rc):
         print("MQTT Connected")
@@ -89,9 +96,11 @@ def main(mqtt_host, mqtt_port, devices):
 
     client.connect(mqtt_host, mqtt_port)
 
-    devices = [Device(device["address"], device["friendly_name"], device["x"], device["y"]) if device["type"] == 0 else Device(device["address"], device["friendly_name"], 0, 0)
-               for device in devices]
-
+    devices = [
+        Device(device["address"], device["friendly_name"], device["x"], device["y"]) if device["type"] == 0 else Device(
+            device["address"], device["friendly_name"], 0, 0)
+        for device in devices]
+    print(devices)
     for device in devices:
         device.ack(client)
 
@@ -99,9 +108,11 @@ def main(mqtt_host, mqtt_port, devices):
     print("loop in thread")
     while True:
         for device in devices:
-            time.sleep(0.1)
+            time.sleep(0.05)
             device.loop(devices, client)
-
+            #if device.antenna:
+             #   for _ in range(5):
+              #      device.loop(devices, client)
 
 if __name__ == "__main__":
     # Load args

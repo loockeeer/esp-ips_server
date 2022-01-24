@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"espips_server/src/utils"
 	"fmt"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -22,8 +23,8 @@ type Database struct {
 }
 
 var Connection *Database
-var positionCache map[string]Position
-var batteryCache map[string]float64
+var positionCache = map[string]Position{}
+var batteryCache = map[string]float64{}
 
 func Connect(host string, port int, token string, org string, bucket string) *Database {
 	log.Println("Connecting with " + token)
@@ -98,7 +99,7 @@ from(bucket:"%s")
   |> yield()
 `, d.bucket, address))
 	if err != nil {
-		return -1.0, err
+		return -1., err
 	}
 	i := 0
 	startX := 0.0
@@ -106,6 +107,12 @@ from(bucket:"%s")
 	x := 0.0
 	y := 0.0
 	for result.Next() {
+		if _, ok := result.Record().Values()["x"]; !ok {
+			return -1., nil
+		}
+		if _, ok := result.Record().Values()["y"]; !ok {
+			return -1., nil
+		}
 		x = result.Record().ValueByKey("x").(float64)
 		y = result.Record().ValueByKey("y").(float64)
 		if i == 0 {
@@ -139,10 +146,10 @@ from(bucket:"%s")
 	} else {
 		if result.Next() {
 			if _, ok := result.Record().Values()["x"]; !ok {
-				return nil, nil
+				return nil, errors.New("x value is not found in database")
 			}
 			if _, ok := result.Record().Values()["y"]; !ok {
-				return nil, nil
+				return nil, errors.New("y value is not found in database")
 			}
 			return &Position{
 				X: result.Record().ValueByKey("x").(float64),

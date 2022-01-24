@@ -60,8 +60,8 @@ var queryType = &gql.Object{
 						return internals.GraphQLDevice{
 							Address:      *device.Address,
 							FriendlyName: *device.FriendlyName,
-							X:            device.GetX(),
-							Y:            device.GetY(),
+							X:            device.GetPosition().X,
+							Y:            device.GetPosition().Y,
 							Speed:        device.GetSpeed(),
 							Battery:      device.GetBattery(),
 							Type:         int(*device.Type),
@@ -87,8 +87,8 @@ var queryType = &gql.Object{
 					data = append(data, internals.GraphQLDevice{
 						Address:      *device.Address,
 						FriendlyName: *device.FriendlyName,
-						X:            device.GetX(),
-						Y:            device.GetY(),
+						X:            device.GetPosition().X,
+						Y:            device.GetPosition().Y,
 						Speed:        device.GetSpeed(),
 						Battery:      device.GetBattery(),
 						Type:         int(*device.Type),
@@ -173,7 +173,6 @@ var mutationType = &gql.Object{
 				fmt.Println(context.Args()["mode"].(int))
 				fmt.Println(internals.AppState)
 				GlobalControl(internals.AppState)
-				go AppStateChangeEvent.Emit(internals.AppState)
 				return true, nil
 			},
 		},

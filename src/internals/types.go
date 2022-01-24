@@ -20,32 +20,12 @@ type Device struct {
 	Type         *DeviceType `json:"type"`
 }
 
-func (d Device) GetX() float64 {
-	if d.X != nil {
-		return *d.X
+func (d Device) GetPosition() (position *Position) {
+	if d.X != nil && d.Y != nil {
+		return &Position{X: *d.X, Y: *d.Y}
 	}
-	result, err := database.Connection.GetPosition(*d.Address)
-	if err != nil {
-		log.Panicln(err)
-	}
-	if result == nil {
-		return 0.0
-	}
-	return result.X
-}
-
-func (d Device) GetY() float64 {
-	if d.Y != nil {
-		return *d.Y
-	}
-	result, err := database.Connection.GetPosition(*d.Address)
-	if err != nil {
-		log.Panicln(err)
-	}
-	if result == nil {
-		return 0.0
-	}
-	return result.Y
+	pos, _ := database.Connection.GetPosition(*d.Address)
+	return &Position{X: pos.X, Y: pos.Y}
 }
 
 func (d Device) GetSpeed() float64 {
@@ -62,6 +42,14 @@ func (d Device) GetBattery() float64 {
 		log.Panicln(err)
 	}
 	return result
+}
+
+func (d Device) SetPosition(pos *Position) error {
+	return database.Connection.PushPosition(*d.Address, database.Position{X: pos.X, Y: pos.Y})
+}
+
+func (d Device) SetBattery(battery float64) error {
+	return database.Connection.PushBattery(*d.Address, battery)
 }
 
 type GraphQLDevice struct {
