@@ -63,6 +63,7 @@ func (d Database) PushRSSI(scanner string, scannedAddress string, rssi int, trai
 
 func (d Database) PushPosition(address string, pos Position) error {
 	positionCache[address] = pos
+	fmt.Printf("%v\n", positionCache[address])
 	point := influxdb2.NewPointWithMeasurement("position").
 		AddTag("address", address).
 		AddField("x", pos.X).

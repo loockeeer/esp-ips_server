@@ -84,5 +84,5 @@ func GetDevice(address string) *Device {
 			return &device
 		}
 	}
-	return &Device{}
+	return nil
 }

@@ -25,6 +25,7 @@ func (d Device) GetPosition() (position *Position) {
 		return &Position{X: *d.X, Y: *d.Y}
 	}
 	pos, _ := database.Connection.GetPosition(*d.Address)
+	log.Println(pos)
 	return &Position{X: pos.X, Y: pos.Y}
 }
 

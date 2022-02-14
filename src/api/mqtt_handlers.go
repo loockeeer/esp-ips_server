@@ -10,10 +10,12 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var (
 	rssiBuffer = map[string]map[string][]int{}
+	rssiBufferMu = sync.Mutex{}
 )
 
 func onConnect(client mqtt.Client) {
@@ -32,6 +34,35 @@ func getMessageInfo(message mqtt.Message) (address string, payload string, err e
 	}
 }
 
+func announceHandler(client mqtt.Client, message mqtt.Message) {
+	address := message.Payload()
+	log.Printf("Received announce packet from %s\n", address)
+	dev := internals.GetDevice(address)
+	DeviceAnnounce.Emit(dev)
+	if dev == nil {
+		return
+	}
+
+	payload := ""
+	if internals.AppState == internals.IDLE_STATE {
+		payload = "3"
+	} else if *dev.Type == internals.AntennaType {
+		if internals.AppState == internals.RUN_STATE {
+			payload = "2"
+		} else if internals.AppState == internals.INIT_STATE {
+			payload = "1"
+		}
+	} else if *dev.Type == internals.CarType {
+		if internals.AppState == internals.RUN_STATE {
+			payload = "0"
+		} else {
+			payload = "3"
+		}
+	}
+
+	client.Publish(fmt.Sprintf("cc/%s", address), 2, false, payload)
+}
+
 func ccHandler(client mqtt.Client, message mqtt.Message) {
 	address, payload, err := getMessageInfo(message)
 	if err != nil {
@@ -39,32 +70,7 @@ func ccHandler(client mqtt.Client, message mqtt.Message) {
 	}
 	switch payload {
 	case "4":
-		log.Printf("Received ack from %s\n", address)
-		dev := internals.GetDevice(address)
-		if dev == nil {
-			break
-		}
 
-		payload := ""
-		if internals.AppState == internals.IDLE_STATE {
-			payload = "3"
-		} else if *dev.Type == internals.AntennaType {
-			if internals.AppState == internals.RUN_STATE {
-				payload = "2"
-			} else if internals.AppState == internals.INIT_STATE {
-				payload = "1"
-			}
-		} else if *dev.Type == internals.CarType {
-			if internals.AppState == internals.RUN_STATE {
-				payload = "0"
-			} else {
-				payload = "3"
-			}
-		}
-
-		client.Publish(fmt.Sprintf("cc/%s", address), 2, false, payload)
-
-		break
 	}
 }
 
@@ -80,11 +86,17 @@ func rssiHandler(_ mqtt.Client, message mqtt.Message) {
 		log.Println(err)
 		return
 	}
+
+	rssiBufferMu.Lock()
+	defer rssiBufferMu.Unlock()
+
 	if rssiBuffer[sender] == nil {
 		rssiBuffer[sender] = map[string][]int{}
 	}
 	rssiBuffer[sender][scanned] = append(rssiBuffer[sender][scanned], rssi)
 	_ = database.Connection.PushRSSI(sender, scanned, rssi, "")
+
+
 	switch internals.AppState {
 	case internals.INIT_STATE:
 		var trainData = map[float64]float64{}
@@ -95,12 +107,18 @@ func rssiHandler(_ mqtt.Client, message mqtt.Message) {
 				} else {
 					scannerDev := internals.GetDevice(scanner)
 					scannedDev := internals.GetDevice(scanned)
-
+					if scannerDev == nil {
+						break
+					} else if scannedDev == nil {
+						continue
+					}
+					fmt.Printf("%v, %v, %s\n", scannerDev, scannedDev,  scanned)
 					if *scannerDev.Type != internals.AntennaType {
 						break
 					} else if *scannedDev.Type != internals.AntennaType {
 						continue
 					}
+					fmt.Println("r u still here?")
 					dist := utils.Distance(scannerDev.GetPosition().X, scannerDev.GetPosition().Y, scannedDev.GetPosition().X, scannedDev.GetPosition().Y)
 
 					for _, rssi := range values {
@@ -144,7 +162,6 @@ func rssiHandler(_ mqtt.Client, message mqtt.Message) {
 				}
 				avgRSSI /= float64(len(values))
 				data[*senderDevice.GetPosition()] = internals.DistanceRssi.Execute(avgRSSI)
-				log.Println(avgRSSI, data[*senderDevice.GetPosition()])
 				rssiBuffer[sender][scanned] = nil
 			}
 		}

@@ -153,6 +153,25 @@ var subscriptionType = &gql.Object{
 				return ch, nil
 			},
 		},
+		"deviceAnnounce": &gql.Field{
+			Type: deviceType,
+			Description: "Subscribe to device announcements",
+			Resolver: func(context gql.Context) (interface{}, error) {
+				ch := make(chan interface{})
+				DeviceAnnounce.Listen(ch)
+				go func() {
+					for {
+						select {
+						case <-context.Context().Done():
+							DeviceAnnounce.RemoveListener(ch)
+							log.Println("Closing a subscription on 'deviceAnnounce")
+							return
+						}
+					}
+				}()
+				return ch, nil
+			},
+		},
 	},
 }
 

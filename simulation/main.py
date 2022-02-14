@@ -59,9 +59,9 @@ class Device:
                     client.publish(f"rssi/{self.address}", f"{other.address},{str(int(rssi))}")
         elif self.car:
             self.angle += 0.1
-            #self.x, self.y = math.cos(self.angle) * 13, math.sin(self.angle) * 13
-            self.x, self.y = 10, 6
-            #print(self.x, self.y)
+            self.x, self.y = math.cos(self.angle) * 13, math.sin(self.angle) * 13
+            #self.x, self.y = 10, 6
+            print(self.x, self.y)
 
     def ack(self, client):
         if not self.antenna: return
@@ -110,9 +110,9 @@ def main(mqtt_host, mqtt_port, devices):
         for device in devices:
             time.sleep(0.05)
             device.loop(devices, client)
-            #if device.antenna:
-             #   for _ in range(5):
-              #      device.loop(devices, client)
+            if device.antenna:
+                for _ in range(3):
+                    device.loop(devices, client)
 
 if __name__ == "__main__":
     # Load args
