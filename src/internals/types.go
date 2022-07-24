@@ -8,8 +8,8 @@ import (
 type DeviceType int
 
 const (
-	AntennaType DeviceType = iota
-	CarType
+	StationType DeviceType = iota
+	BeaconType
 )
 
 type Device struct {

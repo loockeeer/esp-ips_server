@@ -61,12 +61,12 @@ func ListDevices() (devices []Device, err error) {
 		if device.Type == nil {
 			return nil, errors.New("Missing type for device " + *device.Address)
 		}
-		if *device.Type == AntennaType {
+		if *device.Type == StationType {
 			if device.X == nil {
-				return nil, errors.New("Missing X value for antenna " + *device.Address)
+				return nil, errors.New("Missing X value for station " + *device.Address)
 			}
 			if device.Y == nil {
-				return nil, errors.New("Missing Y value for antenna " + *device.Address)
+				return nil, errors.New("Missing Y value for station " + *device.Address)
 			}
 		}
 	}

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	rssiBuffer = map[string]map[string][]int{}
+	rssiBuffer   = map[string]map[string][]int{}
 	rssiBufferMu = sync.Mutex{}
 )
 
@@ -23,6 +23,7 @@ func onConnect(client mqtt.Client) {
 	client.Subscribe("cc/+", 2, ccHandler)
 	client.Subscribe("rssi/+", 2, rssiHandler)
 	client.Subscribe("battery/+", 2, batteryHandler)
+	client.Subscribe("announce", 2, announceHandler)
 }
 
 func getMessageInfo(message mqtt.Message) (address string, payload string, err error) {
@@ -37,7 +38,7 @@ func getMessageInfo(message mqtt.Message) (address string, payload string, err e
 func announceHandler(client mqtt.Client, message mqtt.Message) {
 	address := message.Payload()
 	log.Printf("Received announce packet from %s\n", address)
-	dev := internals.GetDevice(address)
+	dev := internals.GetDevice(string(address))
 	DeviceAnnounce.Emit(dev)
 	if dev == nil {
 		return
@@ -46,13 +47,13 @@ func announceHandler(client mqtt.Client, message mqtt.Message) {
 	payload := ""
 	if internals.AppState == internals.IDLE_STATE {
 		payload = "3"
-	} else if *dev.Type == internals.AntennaType {
+	} else if *dev.Type == internals.StationType {
 		if internals.AppState == internals.RUN_STATE {
 			payload = "2"
 		} else if internals.AppState == internals.INIT_STATE {
 			payload = "1"
 		}
-	} else if *dev.Type == internals.CarType {
+	} else if *dev.Type == internals.BeaconType {
 		if internals.AppState == internals.RUN_STATE {
 			payload = "0"
 		} else {
@@ -64,14 +65,14 @@ func announceHandler(client mqtt.Client, message mqtt.Message) {
 }
 
 func ccHandler(client mqtt.Client, message mqtt.Message) {
-	address, payload, err := getMessageInfo(message)
-	if err != nil {
-		log.Panicln(err)
-	}
-	switch payload {
-	case "4":
-
-	}
+	//address, payload, err := getMessageInfo(message)
+	//if err != nil {
+	//	log.Panicln(err)
+	//}
+	//switch payload {
+	//case "4":
+	//
+	//	}
 }
 
 func rssiHandler(_ mqtt.Client, message mqtt.Message) {
@@ -96,7 +97,6 @@ func rssiHandler(_ mqtt.Client, message mqtt.Message) {
 	rssiBuffer[sender][scanned] = append(rssiBuffer[sender][scanned], rssi)
 	_ = database.Connection.PushRSSI(sender, scanned, rssi, "")
 
-
 	switch internals.AppState {
 	case internals.INIT_STATE:
 		var trainData = map[float64]float64{}
@@ -112,10 +112,10 @@ func rssiHandler(_ mqtt.Client, message mqtt.Message) {
 					} else if scannedDev == nil {
 						continue
 					}
-					fmt.Printf("%v, %v, %s\n", scannerDev, scannedDev,  scanned)
-					if *scannerDev.Type != internals.AntennaType {
+					fmt.Printf("%v, %v, %s\n", scannerDev, scannedDev, scanned)
+					if *scannerDev.Type != internals.StationType {
 						break
-					} else if *scannedDev.Type != internals.AntennaType {
+					} else if *scannedDev.Type != internals.StationType {
 						continue
 					}
 					fmt.Println("r u still here?")

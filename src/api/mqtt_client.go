@@ -39,13 +39,13 @@ func GlobalControl(state int) {
 		if state == internals.IDLE_STATE {
 			payload = "3"
 		}
-		if *device.Type == internals.AntennaType {
+		if *device.Type == internals.StationType {
 			if state == internals.RUN_STATE {
 				payload = "2"
 			} else if state == internals.INIT_STATE {
 				payload = "1"
 			}
-		} else if *device.Type == internals.CarType {
+		} else if *device.Type == internals.BeaconType {
 			if state == internals.RUN_STATE {
 				payload = "0"
 			} else {

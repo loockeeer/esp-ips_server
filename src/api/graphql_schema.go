@@ -35,7 +35,7 @@ var deviceType = &gql.Object{
 			Type:        gql.Float,
 		},
 		"type": &gql.Field{
-			Description: "Device type. 0 = antenna | 1 = car",
+			Description: "Device type. 0 = station | 1 = beacon",
 			Type:        gql.Int,
 		},
 	},
@@ -103,13 +103,14 @@ var queryType = &gql.Object{
 var subscriptionType = &gql.Object{
 	Name: "Subscription",
 	Fields: gql.Fields{
-		"device": &gql.Field{
+		"devices": &gql.Field{
 			Type:        deviceType,
 			Description: "Subscribe to device data",
 			Arguments: gql.Arguments{
 				"address": &gql.Argument{
-					Type:        gql.String,
-					Description: "The address of the device to subscribe to",
+					Type:         gql.String,
+					Description:  "The address of the device to subscribe to",
+					DefaultValue: nil,
 				},
 			},
 			Resolver: func(ctx gql.Context) (interface{}, error) {
@@ -121,10 +122,15 @@ var subscriptionType = &gql.Object{
 						select {
 						case <-ctx.Context().Done():
 							PositionEvent.RemoveListener(ch)
-							log.Println("Closing a subscription on 'device'")
+							log.Println("Closing a subscription on 'devices'")
 							return
 						case data := <-ch:
-							if data.(internals.GraphQLDevice).Address == ctx.Args()["address"] {
+							if address, ok := ctx.Args()["address"]; ok {
+								if address == "" || data.(internals.GraphQLDevice).Address == address {
+									log.Printf("Sending %#v\n", data)
+									out <- data
+								}
+							} else {
 								log.Printf("Sending %#v\n", data)
 								out <- data
 							}
@@ -154,7 +160,7 @@ var subscriptionType = &gql.Object{
 			},
 		},
 		"deviceAnnounce": &gql.Field{
-			Type: deviceType,
+			Type:        deviceType,
 			Description: "Subscribe to device announcements",
 			Resolver: func(context gql.Context) (interface{}, error) {
 				ch := make(chan interface{})
