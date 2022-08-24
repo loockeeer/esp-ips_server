@@ -1,11 +1,16 @@
-module espips_server
+module github.com/loockeeer/espipsserver
 
-go 1.16
+go 1.19
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.3.5
-	github.com/influxdata/influxdb-client-go/v2 v2.6.0
-	github.com/rigglo/gql v0.5.1
-	github.com/rigglo/gqlws v0.2.0
-	gonum.org/v1/gonum v0.9.3
+	github.com/eclipse/paho.mqtt.golang v1.4.1
+	gonum.org/v1/gonum v0.11.0
+)
+
+require (
+	github.com/gorilla/websocket v1.4.2 // indirect
+	golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3 // indirect
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/tools v0.1.9 // indirect
 )
