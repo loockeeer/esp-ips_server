@@ -9,8 +9,8 @@ import (
 )
 
 type DistanceRssiModel struct {
-	A float64
-	B float64
+	A float64 `json:"a"`
+	B float64 `json:"b"`
 }
 
 func NewDistanceRssiModel() DistanceRssiModel {
@@ -42,7 +42,9 @@ func (d *DistanceRssiModel) Train(collector RSSICollector, distances map[string]
 			for scanned, rssiqueue := range values {
 				if _, ok := distances[scanner]; ok {
 					if _, ok := distances[scanner][scanned]; ok {
-						avg := tools.Sum[float64](rssiqueue.Get()) / float64(len(rssiqueue.Get()))
+						avg := float64(tools.Sum[int](tools.Map[TimeEntry, int](rssiqueue.Data, func(v TimeEntry) int {
+							return v.RSSI
+						}))) / float64(len(rssiqueue.Data))
 						total += math.Pow(m.executeLinear(avg)-math.Log10(distances[scanner][scanned]), 2)
 					}
 				}

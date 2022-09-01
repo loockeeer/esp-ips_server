@@ -7,7 +7,7 @@ import (
 	"math"
 )
 
-func distance(pos1 Position, pos2 Position) float64 {
+func Distance(pos1 Position, pos2 Position) float64 {
 	return math.Sqrt(math.Pow(pos1.X-pos2.X, 2) + math.Pow(pos1.Y-pos2.Y, 2))
 }
 
@@ -15,7 +15,7 @@ func TrueRangeMultilateration(data map[Position]float64) (pos *Position, err err
 	errorFunc := func(x []float64) float64 {
 		total := 0.0
 		for stationPos, dist := range data {
-			total += math.Pow(distance(stationPos, ListToPosition(x))-dist, 2)
+			total += math.Pow(Distance(stationPos, ListToPosition(x))-dist, 2)
 		}
 		return total
 	}

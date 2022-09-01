@@ -1,7 +1,7 @@
 package tools
 
 type Number interface {
-	int64 | float64
+	int | int8 | int16 | int32 | int64 | float64 | float32
 }
 
 func RemoveSlice[T any](s []T, i int) []T {
@@ -23,4 +23,13 @@ func Sum[T Number](s []T) T {
 		total += v
 	}
 	return total
+}
+
+func Find[T any](s []T, f func(T)bool) *T {
+	for _, v := range s {
+		if f(v) {
+			return &v
+		}
+	}
+	return nil
 }

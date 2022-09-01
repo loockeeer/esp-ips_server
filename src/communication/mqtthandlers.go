@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func RSSIHandler(devicewrapper *DeviceCommunicationWrapper, client mqtt.Client, message mqtt.Message) {
+func RSSIHandler(devicewrapper *DeviceAPI, client mqtt.Client, message mqtt.Message) {
 	scannerA := strings.Split(message.Topic(), "/")
 	if len(scannerA) != 2 {
 		return
@@ -28,6 +28,6 @@ func RSSIHandler(devicewrapper *DeviceCommunicationWrapper, client mqtt.Client, 
 	})
 }
 
-func PingHandler(devicewrapper *DeviceCommunicationWrapper, client mqtt.Client, message mqtt.Message) {
+func PingHandler(devicewrapper *DeviceAPI, client mqtt.Client, message mqtt.Message) {
 
 }
