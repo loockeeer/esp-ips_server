@@ -10,7 +10,7 @@ It features two modes :
 
 Unfortunately, the system never really worked properly. Probably since the antennas used (although straight) weren't made for this purpose, and for the RSSI surely isn't a precise enough metric.
 
-I developped this project in _classe de première_, on the suggestion of my _TP_ teacher in _NSI_ who gave me the opportunity to attend _BTS_ _TP_. 
+I developped this project in _classe de première_, on the suggestion of my CS lab work teacher in _NSI_ who gave me the opportunity to attend his _BTS_ class' lab work. 
 
 ## Instructions
 
